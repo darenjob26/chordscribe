@@ -2,6 +2,9 @@
 
 import { useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
+import ThemedInput from "@/components/ui/Input";
+import Input from "@/components/ui/Input";
+import ThemedButton from "@/components/ui/TButton";
 import { useAuth } from "@/providers/auth-provider";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -11,7 +14,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -48,128 +50,83 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.background }]}
+      className="flex-1"
+      style={{ backgroundColor: colors.background }}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardAvoid}
+        className="flex-1"
       >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.logoContainer}>
+        <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 24, justifyContent: "center" }}>
+          <View className="items-center mb-8">
             <View
-              style={[
-                styles.logoCircle,
-                { backgroundColor: colors.primaryLight },
-              ]}
+              className="w-16 h-16 rounded-full justify-center items-center mb-4"
+              style={{ backgroundColor: colors.primaryLight }}
             >
               <Feather name="music" size={32} color={colors.primary} />
             </View>
-            <Text style={[styles.title, { color: colors.text }]}>
+            <Text className="text-2xl font-bold mb-2 text-center" style={{ color: colors.text }}>
               Welcome to ChordScribe
             </Text>
-            <Text style={[styles.subtitle, { color: colors.muted }]}>
+            <Text className="text-base text-center" style={{ color: colors.muted }}>
               Enter your credentials to access your account
             </Text>
           </View>
 
-          <View style={styles.formContainer}>
+          <View className="mb-6">
             {/* Email Input */}
-            <Text style={[styles.label, { color: colors.text }]}>Email</Text>
-            <View
-              style={[
-                styles.inputContainer,
-                { borderColor: colors.border, backgroundColor: colors.card },
-              ]}
-            >
-              <Feather
-                name="mail"
-                size={20}
-                color={colors.muted}
-                style={styles.inputIcon}
-              />
-              <TextInput
-                style={[styles.input, { color: colors.text }]}
-                placeholder="Enter your email"
-                placeholderTextColor={colors.muted}
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                keyboardType="email-address"
-              />
-            </View>
+            <ThemedInput
+              label="Email"
+              value={email}
+              onChangeText={setEmail}
+              placeholder="Enter your email"
+              leftIcon={<Feather name="mail" size={20} color={colors.muted} />}
+              autoCapitalize="none"
+              keyboardType="email-address"
+            />
 
             {/* Password Input */}
-            <Text style={[styles.label, { color: colors.text }]}>Password</Text>
-            <View
-              style={[
-                styles.inputContainer,
-                { borderColor: colors.border, backgroundColor: colors.card },
-              ]}
-            >
-              <Feather
-                name="lock"
-                size={20}
-                color={colors.muted}
-                style={styles.inputIcon}
-              />
-              <TextInput
-                style={[styles.input, { color: colors.text }]}
-                placeholder="Enter your password"
-                placeholderTextColor={colors.muted}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-              />
-              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                <Feather
-                  name={showPassword ? "eye-off" : "eye"}
-                  size={20}
-                  color={colors.muted}
-                />
-              </TouchableOpacity>
-            </View>
+            <ThemedInput
+              label="Password"
+              value={password}
+              onChangeText={setPassword}
+              placeholder="Enter your password"
+              leftIcon={<Feather name="lock" size={20} color={colors.muted} />}
+              rightIcon={<TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                <Feather name={!showPassword ? "eye-off" : "eye"} size={20} color={colors.muted} />
+              </TouchableOpacity>}
+              secureTextEntry={!showPassword}
+            />
 
             <TouchableOpacity
-              style={styles.forgotPassword}
+              className="self-end mb-6"
               onPress={() => router.push("/auth/forgot-password")}
             >
-              <Text style={{ color: colors.primary }}>Forgot password?</Text>
+              <Text style={{ color: colors.secondary }}>Forgot password?</Text>
             </TouchableOpacity>
 
-            <Button
-              onPress={handleLogin}
-              isLoading={isLoading}
-              style={styles.loginButton}
-            >
-              <Text style={styles.loginButtonText}>Sign In</Text>
-            </Button>
+            <ThemedButton variant="default" title="Sign In" onPress={handleLogin} disabled={isLoading} />
 
-            <View style={styles.dividerContainer}>
-              <View
-                style={[styles.divider, { backgroundColor: colors.border }]}
-              />
-              <Text style={[styles.dividerText, { color: colors.muted }]}>
-                OR
-              </Text>
-              <View
-                style={[styles.divider, { backgroundColor: colors.border }]}
-              />
+            <View className="flex-row items-center my-6">
+              <View className="flex-1 h-[1px]" style={{ backgroundColor: colors.border }} />
+              <Text className="mx-4" style={{ color: colors.muted }}>OR</Text>
+              <View className="flex-1 h-[1px]" style={{ backgroundColor: colors.border }} />
             </View>
 
-            <Button
+            <ThemedButton
               variant="outline"
-              onPress={() => {}}
-              style={styles.googleButton}
+              title="Sign in with Google"
+              onPress={() => { }}
+              disabled={isLoading}
               leftIcon={<GoogleIcon />}
-            >
-              <Text style={{ color: colors.text }}>Sign in with Google</Text>
-            </Button>
+            />
+
           </View>
 
-          <View style={styles.footer}>
+          <View className="flex-row justify-center">
             <Text style={{ color: colors.muted }}>Don't have an account? </Text>
             <TouchableOpacity onPress={() => router.push("/auth/signup")}>
-              <Text style={{ color: colors.primary }}>Sign up</Text>
+              <Text style={{ color: colors.secondary }}>Sign up</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -180,114 +137,8 @@ export default function LoginScreen() {
 
 function GoogleIcon() {
   return (
-    <View style={styles.googleIconContainer}>
-      <Text style={styles.googleIconText}>G</Text>
+    <View className="w-6 h-6 rounded-full bg-gray-100 justify-center items-center mr-2">
+      <Text className="text-base font-bold">G</Text>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  keyboardAvoid: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    padding: 24,
-    justifyContent: "center",
-  },
-  logoContainer: {
-    alignItems: "center",
-    marginBottom: 32,
-  },
-  logoCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: 16,
-    textAlign: "center",
-  },
-  formContainer: {
-    marginBottom: 24,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: "500",
-    marginBottom: 8,
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    marginBottom: 16,
-    height: 50,
-  },
-  inputIcon: {
-    marginRight: 8,
-  },
-  input: {
-    flex: 1,
-    height: 50,
-    fontSize: 16,
-  },
-  forgotPassword: {
-    alignSelf: "flex-end",
-    marginBottom: 24,
-  },
-  loginButton: {
-    height: 50,
-    marginBottom: 24,
-  },
-  loginButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  dividerContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  divider: {
-    flex: 1,
-    height: 1,
-  },
-  dividerText: {
-    marginHorizontal: 8,
-  },
-  googleButton: {
-    height: 50,
-  },
-  googleIconContainer: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: "#4285F4",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 8,
-  },
-  googleIconText: {
-    color: "white",
-    fontWeight: "bold",
-  },
-  footer: {
-    flexDirection: "row",
-    justifyContent: "center",
-  },
-});

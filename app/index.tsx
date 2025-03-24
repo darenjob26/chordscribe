@@ -27,6 +27,6 @@ export default function Home() {
   }
 
   return (
-    <Redirect href="/(features)/playbook" />
+    <Redirect href="/(tabs)/playbook" />
   );
 }

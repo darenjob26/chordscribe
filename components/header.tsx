@@ -1,5 +1,5 @@
 "use client"
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native"
+import { View, Text, TouchableOpacity } from "react-native"
 import { Feather } from "@expo/vector-icons"
 import { useRouter, usePathname } from "expo-router"
 import { useTheme } from "@/components/theme-provider"
@@ -21,24 +21,31 @@ export function Header({ onMenuPress, title }: HeaderProps) {
   const showBackButton = pathname !== "/" && pathname !== "/playbook" && pathname !== "/session"
 
   return (
-    <View style={[styles.header, { backgroundColor: colors.background }]}>
-      <View style={styles.leftContainer}>
+    <View 
+      className="h-16 flex-row items-center justify-between px-4 border-b border-gray-200"
+      style={{ backgroundColor: colors.background }}
+    >
+      <View className="w-12">
         {showBackButton ? (
-          <TouchableOpacity style={styles.iconButton} onPress={() => router.back()}>
-            <Feather name="arrow-left" size={24} color={colors.text} />
+          <TouchableOpacity className="p-2" onPress={() => router.back()}>
+            <Feather name="arrow-left" size={20} color={colors.text} />
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity style={styles.iconButton} onPress={onMenuPress}>
-            <Feather name="menu" size={24} color={colors.text} />
+          <TouchableOpacity className="p-2" onPress={onMenuPress}>
+            <Feather name="menu" size={20} color={colors.text} />
           </TouchableOpacity>
         )}
       </View>
 
-      <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
+      <Text 
+        className="text-base font-semibold flex-1 text-center"
+        style={{ color: colors.text }}
+        numberOfLines={1}
+      >
         {headerTitle}
       </Text>
 
-      <View style={styles.rightContainer} />
+      <View className="w-12" />
     </View>
   )
 }
@@ -53,31 +60,4 @@ function getHeaderTitle(pathname: string): string {
   // Default title
   return "ChordScribe"
 }
-
-const styles = StyleSheet.create({
-  header: {
-    height: 56,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e5e5",
-  },
-  leftContainer: {
-    width: 40,
-  },
-  rightContainer: {
-    width: 40,
-  },
-  iconButton: {
-    padding: 8,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
-    flex: 1,
-    textAlign: "center",
-  },
-})
 

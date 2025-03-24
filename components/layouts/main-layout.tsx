@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState } from "react"
-import { View, StyleSheet, useWindowDimensions } from "react-native"
+import { View, useWindowDimensions } from "react-native"
 import { Drawer } from "react-native-drawer-layout"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { Sidebar } from "@/components/sidebar"
@@ -18,14 +18,14 @@ export function MainLayout({ children }: MainLayoutProps) {
   const isLargeScreen = dimensions.width >= 768
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1">
       {isLargeScreen ? (
-        <View style={styles.largeScreenContainer}>
-          <View style={styles.sidebarContainer}>
+        <View className="flex-1 flex-row">
+          <View className="w-[280px] border-r border-gray-200">
             <Sidebar />
           </View>
-          <View style={styles.contentContainer}>
-            <SafeAreaView style={styles.content}>{children}</SafeAreaView>
+          <View className="flex-1">
+            <SafeAreaView className="flex-1">{children}</SafeAreaView>
           </View>
         </View>
       ) : (
@@ -35,9 +35,9 @@ export function MainLayout({ children }: MainLayoutProps) {
           onClose={() => setOpen(false)}
           renderDrawerContent={() => <Sidebar onClose={() => setOpen(false)} />}
           drawerType="slide"
-          drawerStyle={styles.drawer}
+          drawerStyle={{ width: 280 }}
         >
-          <SafeAreaView style={styles.content}>
+          <SafeAreaView className="flex-1">
             <Header onMenuPress={() => setOpen(true)} />
             {children}
           </SafeAreaView>
@@ -46,28 +46,4 @@ export function MainLayout({ children }: MainLayoutProps) {
     </View>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  largeScreenContainer: {
-    flex: 1,
-    flexDirection: "row",
-  },
-  sidebarContainer: {
-    width: 280,
-    borderRightWidth: 1,
-    borderRightColor: "#e5e5e5",
-  },
-  contentContainer: {
-    flex: 1,
-  },
-  content: {
-    flex: 1,
-  },
-  drawer: {
-    width: 280,
-  },
-})
 

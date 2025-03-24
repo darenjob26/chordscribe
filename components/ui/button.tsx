@@ -4,7 +4,6 @@ import { useTheme } from "@/components/theme-provider";
 import type React from "react";
 import {
   ActivityIndicator,
-  StyleSheet,
   Text,
   TouchableOpacity,
   type StyleProp,
@@ -58,7 +57,7 @@ export function Button({
         };
       default:
         return {
-          backgroundColor: colors.primary,
+          backgroundColor: "#000000",
         };
     }
   };
@@ -79,11 +78,11 @@ export function Button({
   const getPadding = () => {
     switch (size) {
       case "sm":
-        return { paddingVertical: 6, paddingHorizontal: 12 };
+        return "py-2 px-4";
       case "lg":
-        return { paddingVertical: 12, paddingHorizontal: 24 };
+        return "py-3 px-6";
       default:
-        return { paddingVertical: 8, paddingHorizontal: 16 };
+        return "py-2.5 px-5";
     }
   };
 
@@ -91,32 +90,32 @@ export function Button({
   const getFontSize = () => {
     switch (size) {
       case "sm":
-        return 14;
+        return "text-sm";
       case "lg":
-        return 18;
+        return "text-lg";
       default:
-        return 16;
+        return "text-base";
     }
   };
 
   const buttonStyles = [
-    styles.button,
-    getButtonStyles(),
+    "flex-row items-center justify-center rounded-lg",
     getPadding(),
-    disabled && styles.disabled,
+    disabled && "opacity-50",
     style,
   ];
 
   const textStyles = [
-    styles.text,
-    { color: getTextColor(), fontSize: getFontSize() },
-    disabled && styles.disabledText,
+    "font-medium",
+    getFontSize(),
+    disabled && "opacity-50",
     textStyle,
   ];
 
   return (
     <TouchableOpacity
-      style={buttonStyles}
+      className={buttonStyles.join(" ")}
+      style={[getButtonStyles(), style]}
       disabled={disabled || isLoading}
       {...props}
     >
@@ -126,7 +125,9 @@ export function Button({
         <>
           {leftIcon && <>{leftIcon}</>}
           {typeof children === "string" ? (
-            <Text style={textStyles}>{children}</Text>
+            <Text className={textStyles.join(" ")} style={{ color: getTextColor() }}>
+              {children}
+            </Text>
           ) : (
             children
           )}
@@ -136,21 +137,3 @@ export function Button({
     </TouchableOpacity>
   );
 }
-
-const styles = StyleSheet.create({
-  button: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 8,
-  },
-  text: {
-    fontWeight: "500",
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-  disabledText: {
-    opacity: 0.5,
-  },
-});

@@ -1,6 +1,7 @@
 "use client";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router } from "expo-router";
 import type React from "react";
 import { createContext, useContext, useEffect, useState } from "react";
 
@@ -82,6 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await AsyncStorage.removeItem("user");
       setUser(null);
+      router.replace("/auth/login");
     } finally {
       setIsLoading(false);
     }

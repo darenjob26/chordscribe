@@ -2,6 +2,7 @@
 
 import { useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
+import ThemedButton from "@/components/ui/TButton";
 import { useAuth } from "@/providers/auth-provider";
 import { Feather } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -10,7 +11,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  StyleSheet,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
@@ -38,50 +39,45 @@ export default function VerifyScreen() {
   }, [email, router]);
 
   useEffect(() => {
-    if (countdown > 0) {
-      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-      return () => clearTimeout(timer);
-    } else {
+    let timer: NodeJS.Timeout;
+    if (countdown > 0 && !canResend) {
+      timer = setInterval(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
+    } else if (countdown === 0) {
       setCanResend(true);
     }
-  }, [countdown]);
+    return () => clearInterval(timer);
+  }, [countdown, canResend]);
 
-  const handleOtpChange = (index: number, value: string) => {
-    if (value.length > 1) {
-      value = value.slice(0, 1);
-    }
-
-    if (value && !/^\d+$/.test(value)) {
-      return;
-    }
-
+  const handleOtpChange = (text: string, index: number) => {
     const newOtp = [...otp];
-    newOtp[index] = value;
+    newOtp[index] = text;
     setOtp(newOtp);
 
     // Auto-focus next input
-    if (value && index < 5) {
+    if (text && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
   };
 
-  const handleKeyPress = (index: number, e: any) => {
+  const handleKeyPress = (e: any, index: number) => {
     if (e.nativeEvent.key === "Backspace" && !otp[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
   };
 
   const handleVerify = async () => {
-    const otpValue = otp.join("");
-    if (otpValue.length !== 6) {
-      Alert.alert("Error", "Please enter a valid 6-digit code");
+    const otpString = otp.join("");
+    if (otpString.length !== 6) {
+      Alert.alert("Error", "Please enter the complete verification code");
       return;
     }
 
     setIsLoading(true);
     try {
-      await verifyOTP(email || "", otpValue);
-      router.replace("/");
+      await verifyOTP(email, otpString);
+      router.push("/");
     } catch (error) {
       Alert.alert("Error", "Invalid verification code. Please try again.");
     } finally {
@@ -89,170 +85,90 @@ export default function VerifyScreen() {
     }
   };
 
-  const handleResend = async () => {
-    setIsLoading(true);
+  const handleResendOtp = async () => {
+    if (!canResend) return;
     try {
-      await resendOTP(email || "");
+      await resendOTP(email);
       setCountdown(60);
       setCanResend(false);
-      Alert.alert("Success", "Verification code resent successfully");
+      Alert.alert("Success", "Verification code has been resent to your email");
     } catch (error) {
-      Alert.alert(
-        "Error",
-        "Failed to resend verification code. Please try again."
-      );
-    } finally {
-      setIsLoading(false);
+      Alert.alert("Error", "Failed to resend verification code. Please try again.");
     }
   };
 
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.background }]}
+      className="flex-1"
+      style={{ backgroundColor: colors.background }}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardAvoid}
+        className="flex-1"
       >
-        <View style={styles.content}>
-          <View style={styles.logoContainer}>
+        <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 24, justifyContent: "center" }}>
+          <View className="items-center mb-8">
             <View
-              style={[
-                styles.logoCircle,
-                { backgroundColor: colors.primaryLight },
-              ]}
+              className="w-16 h-16 rounded-full justify-center items-center mb-4"
+              style={{ backgroundColor: colors.primaryLight }}
             >
               <Feather name="mail" size={32} color={colors.primary} />
             </View>
-            <Text style={[styles.title, { color: colors.text }]}>
+            <Text className="text-2xl font-bold mb-2 text-center" style={{ color: colors.text }}>
               Verify your email
             </Text>
-            <Text style={[styles.subtitle, { color: colors.muted }]}>
-              We've sent a verification code to{"\n"}
-              <Text style={{ fontWeight: "bold" }}>{email}</Text>
+            <Text className="text-base text-center" style={{ color: colors.muted }}>
+              Enter the verification code sent to {email}
             </Text>
           </View>
 
-          <View style={styles.otpContainer}>
-            {otp.map((digit, index) => (
-              <TextInput
-                key={index}
-                ref={(ref) => (inputRefs.current[index] = ref)}
-                style={[
-                  styles.otpInput,
-                  {
+          <View className="mb-6">
+            <View className="flex-row justify-between mb-6">
+              {otp.map((digit, index) => (
+                <TextInput
+                  key={index}
+                  ref={(ref) => (inputRefs.current[index] = ref)}
+                  className="w-12 h-12 border rounded-lg text-center text-xl"
+                  style={{
                     borderColor: colors.border,
                     backgroundColor: colors.card,
                     color: colors.text,
-                  },
-                ]}
-                value={digit}
-                onChangeText={(value) => handleOtpChange(index, value)}
-                onKeyPress={(e) => handleKeyPress(index, e)}
-                keyboardType="number-pad"
-                maxLength={1}
-                autoFocus={index === 0}
-              />
-            ))}
-          </View>
+                  }}
+                  maxLength={1}
+                  keyboardType="number-pad"
+                  value={digit}
+                  onChangeText={(text) => handleOtpChange(text, index)}
+                  onKeyPress={(e) => handleKeyPress(e, index)}
+                  placeholder="0"
+                  placeholderTextColor={colors.muted}
+                  autoFocus={index === 0}
+                />
+              ))}
+            </View>
 
-          <Button
-            onPress={handleVerify}
-            isLoading={isLoading}
-            style={styles.verifyButton}
-            disabled={otp.join("").length !== 6}
-          >
-            <Text style={styles.verifyButtonText}>Verify Email</Text>
-          </Button>
+            <ThemedButton
+              title="Verify Email"
+              onPress={handleVerify}
+              disabled={isLoading}
+            />
 
-          <View style={styles.resendContainer}>
-            {canResend ? (
-              <TouchableOpacity onPress={handleResend} disabled={isLoading}>
-                <Text style={{ color: colors.primary }}>
-                  Resend verification code
-                </Text>
-              </TouchableOpacity>
-            ) : (
+            <View className="flex-row justify-center my-3">
               <Text style={{ color: colors.muted }}>
-                Resend code in {countdown} seconds
+                Didn't receive the code?{" "}
               </Text>
-            )}
+              {canResend ? (
+                  <TouchableOpacity onPress={handleResendOtp}>
+                    <Text style={{ color: colors.primary }}>Resend</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <Text style={{ color: colors.muted }}>
+                    Resend in {countdown}s
+                  </Text>
+                )}
+            </View>
           </View>
-
-          <Text style={[styles.helpText, { color: colors.muted }]}>
-            Check your spam folder if you don't see the email in your inbox
-          </Text>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  keyboardAvoid: {
-    flex: 1,
-  },
-  content: {
-    flex: 1,
-    padding: 24,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  logoContainer: {
-    alignItems: "center",
-    marginBottom: 32,
-  },
-  logoCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: 16,
-    textAlign: "center",
-    marginBottom: 24,
-  },
-  otpContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginBottom: 32,
-  },
-  otpInput: {
-    width: 45,
-    height: 50,
-    borderWidth: 1,
-    borderRadius: 8,
-    textAlign: "center",
-    fontSize: 20,
-    fontWeight: "bold",
-    marginHorizontal: 5,
-  },
-  verifyButton: {
-    height: 50,
-    width: "100%",
-    marginBottom: 24,
-  },
-  verifyButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  resendContainer: {
-    marginBottom: 24,
-  },
-  helpText: {
-    textAlign: "center",
-  },
-});

@@ -1,19 +1,20 @@
 "use client";
 
-import { MainLayout } from "@/components/layouts/main-layout";
 import { useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
+import ThemedInput from "@/components/ui/Input";
+import ThemedButton from "@/components/ui/TButton";
 import { Feather } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   FlatList,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Mock data for playbooks and songs
 interface Song {
@@ -142,6 +143,7 @@ export default function PlaybookDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
 
   const [playbook, setPlaybook] = useState<Playbook | null>(null);
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
@@ -183,110 +185,104 @@ export default function PlaybookDetailScreen() {
 
   if (!playbook) {
     return (
-      <MainLayout>
-        <View style={styles.container}>
-          <Text>Playbook not found</Text>
-        </View>
-      </MainLayout>
+      <View className="flex-1 justify-center items-center p-4">
+        <Text className="text-muted">Playbook not found</Text>
+      </View>
     );
   }
 
+  const headerHeight = insets.top + 30;
+
   return (
-    <MainLayout>
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <View style={styles.titleContainer}>
+    <View className="flex-1 p-4" style={{ paddingTop: headerHeight }}>
+      <View className="mb-8">
+        <View className="flex-row items-center">
+          <TouchableOpacity
+            className="mr-4"
+            onPress={() => router.back()}
+          >
+            <Feather name="arrow-left" size={24} color={colors.text} />
+          </TouchableOpacity>
+          <Text
+            className="text-2xl font-bold"
+            style={{ color: colors.text }}
+            numberOfLines={1}
+          >
+            {playbook.name}
+          </Text>
+
+          {!playbook.isDefault && (
             <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => router.back()}
+              className="p-2"
+              onPress={() => setIsOptionsMenuOpen(!isOptionsMenuOpen)}
             >
-              <Feather name="arrow-left" size={24} color={colors.text} />
+              <Feather name="more-horizontal" size={24} color={colors.text} />
             </TouchableOpacity>
-            <Text
-              style={[styles.title, { color: colors.text }]}
-              numberOfLines={1}
-            >
-              {playbook.name}
-            </Text>
-
-            {!playbook.isDefault && (
-              <TouchableOpacity
-                style={styles.optionsButton}
-                onPress={() => setIsOptionsMenuOpen(!isOptionsMenuOpen)}
-              >
-                <Feather name="more-horizontal" size={24} color={colors.text} />
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {isOptionsMenuOpen && !playbook.isDefault && (
-            <View
-              style={[
-                styles.optionsMenu,
-                { backgroundColor: colors.card, borderColor: colors.border },
-              ]}
-            >
-              <TouchableOpacity
-                style={styles.optionItem}
-                onPress={() => {
-                  setIsRenameDialogOpen(true);
-                  setIsOptionsMenuOpen(false);
-                }}
-              >
-                <Feather name="edit-2" size={16} color={colors.text} />
-                <Text style={[styles.optionText, { color: colors.text }]}>
-                  Rename Playbook
-                </Text>
-              </TouchableOpacity>
-              <View
-                style={[
-                  styles.optionDivider,
-                  { backgroundColor: colors.border },
-                ]}
-              />
-              <TouchableOpacity
-                style={styles.optionItem}
-                onPress={() => {
-                  setIsDeleteDialogOpen(true);
-                  setIsOptionsMenuOpen(false);
-                }}
-              >
-                <Feather name="trash-2" size={16} color={colors.error} />
-                <Text style={[styles.optionText, { color: colors.error }]}>
-                  Delete Playbook
-                </Text>
-              </TouchableOpacity>
-            </View>
           )}
         </View>
 
-        <View style={styles.searchContainer}>
+        {isOptionsMenuOpen && !playbook.isDefault && (
           <View
-            style={[
-              styles.searchInputContainer,
-              { backgroundColor: colors.card, borderColor: colors.border },
-            ]}
+            className="absolute right-0 top-10 w-40 rounded-lg border border-gray-300 bg-white shadow-md"
+            style={{ backgroundColor: colors.card, borderColor: colors.border }}
+          >
+            <TouchableOpacity
+              className="flex-row items-center p-2"
+              onPress={() => {
+                setIsRenameDialogOpen(true);
+                setIsOptionsMenuOpen(false);
+              }}
+            >
+              <Feather name="edit-2" size={16} color={colors.text} />
+              <Text className="ml-2" style={{ color: colors.text }}>
+                Rename Playbook
+              </Text>
+            </TouchableOpacity>
+            <View
+              className="h-px bg-gray-300"
+            />
+            <TouchableOpacity
+              className="flex-row items-center p-2"
+              onPress={() => {
+                setIsDeleteDialogOpen(true);
+                setIsOptionsMenuOpen(false);
+              }}
+            >
+              <Feather name="trash-2" size={16} color={colors.error} />
+              <Text className="ml-2" style={{ color: colors.error }}>
+                Delete Playbook
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+
+      <View className="mb-8">
+        <View className="flex-row items-center gap-4 mb-6">
+          <View
+            className="flex-row items-center h-10 rounded-lg border border-gray-300 bg-gree h-[50px] flex-1"
+            style={{ backgroundColor: colors.card, borderColor: colors.border }}
           >
             <Feather
               name="search"
               size={20}
               color={colors.muted}
-              style={styles.searchIcon}
+              className="mx-2"
             />
             <TextInput
-              style={[styles.searchInput, { color: colors.text }]}
+              className="flex-1"
+              style={{ color: colors.text }}
               placeholder="Search songs..."
               placeholderTextColor={colors.muted}
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
           </View>
-          <Button
+          <ThemedButton 
+            title="Add Song"
             onPress={() => router.push(`/playbook/${id}/add-song` as any)}
             leftIcon={<Feather name="plus" size={18} color="white" />}
-          >
-            <Text style={styles.buttonText}>Add Song</Text>
-          </Button>
+          />
         </View>
 
         {filteredSongs.length > 0 ? (
@@ -295,10 +291,8 @@ export default function PlaybookDetailScreen() {
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
               <TouchableOpacity
-                style={[
-                  styles.songCard,
-                  { backgroundColor: colors.card, borderColor: colors.border },
-                ]}
+                className="flex-row items-center p-4 rounded-lg border border-gray-300 bg-white mb-2"
+                style={{ backgroundColor: colors.card, borderColor: colors.border }}
                 onPress={() =>
                   router.push(`/playbook/${id}/song/${item.id}` as any)
                 }
@@ -307,27 +301,28 @@ export default function PlaybookDetailScreen() {
                   name="music"
                   size={20}
                   color={colors.primary}
-                  style={styles.songIcon}
+                  className="mr-2"
                 />
-                <View style={styles.songInfo}>
+                <View className="flex-1">
                   <Text
-                    style={[styles.songTitle, { color: colors.text }]}
+                    className="text-lg font-semibold"
+                    style={{ color: colors.text }}
                     numberOfLines={1}
                   >
                     {item.title}
                   </Text>
-                  <Text style={[styles.songKey, { color: colors.muted }]}>
+                  <Text className="text-sm" style={{ color: colors.muted }}>
                     Key: {item.key}
                   </Text>
                 </View>
               </TouchableOpacity>
             )}
-            contentContainerStyle={styles.listContent}
+            contentContainerStyle={{ paddingBottom: 16 }}
             showsVerticalScrollIndicator={false}
           />
         ) : (
-          <View style={styles.emptyContainer}>
-            <Text style={{ color: colors.muted }}>
+          <View className="flex-1 justify-center items-center p-4">
+            <Text className="text-muted">
               {searchQuery
                 ? "No songs match your search"
                 : "No songs in this playbook yet"}
@@ -337,53 +332,46 @@ export default function PlaybookDetailScreen() {
 
         {/* Rename Dialog */}
         {isRenameDialogOpen && (
-          <View style={styles.modalOverlay}>
+          <View className="absolute inset-0 justify-center items-center">
             <View
-              style={[
-                styles.modalContent,
-                { backgroundColor: colors.background },
-              ]}
+              className="w-full rounded-lg p-4"
+              style={{ backgroundColor: colors.background }}
             >
-              <Text style={[styles.modalTitle, { color: colors.text }]}>
+              <Text className="text-lg font-semibold" style={{ color: colors.text }}>
                 Rename Playbook
               </Text>
-              <Text style={[styles.modalSubtitle, { color: colors.muted }]}>
+              <Text className="text-sm" style={{ color: colors.muted }}>
                 Change the name of your playbook.
               </Text>
 
-              <Text style={[styles.inputLabel, { color: colors.text }]}>
+              <Text className="text-sm" style={{ color: colors.text }}>
                 Playbook Name
               </Text>
               <TextInput
-                style={[
-                  styles.input,
-                  {
-                    borderColor: colors.border,
-                    backgroundColor: colors.card,
-                    color: colors.text,
-                  },
-                ]}
+                className="h-10 rounded-lg border border-gray-300 bg-white"
+                style={{ color: colors.text }}
+                placeholder="My Playbook"
+                placeholderTextColor={colors.muted}
                 value={newPlaybookName}
                 onChangeText={setNewPlaybookName}
                 autoFocus
               />
 
-              <View style={styles.modalButtons}>
+
+              <View className="flex-row justify-end gap-3">
                 <Button
                   variant="outline"
                   onPress={() => {
                     setIsRenameDialogOpen(false);
                     setNewPlaybookName(playbook.name);
                   }}
-                  style={styles.modalButton}
                 >
                   <Text style={{ color: colors.text }}>Cancel</Text>
                 </Button>
                 <Button
                   onPress={handleRenamePlaybook}
-                  style={styles.modalButton}
                 >
-                  <Text style={styles.buttonText}>Save Changes</Text>
+                  <Text style={{ color: colors.text }}>Save Changes</Text>
                 </Button>
               </View>
             </View>
@@ -392,225 +380,46 @@ export default function PlaybookDetailScreen() {
 
         {/* Delete Confirmation Dialog */}
         {isDeleteDialogOpen && (
-          <View style={styles.modalOverlay}>
+          <View className="absolute inset-0 justify-center items-center">
             <View
-              style={[
-                styles.modalContent,
-                { backgroundColor: colors.background },
-              ]}
+              className="w-full rounded-lg p-4"
+              style={{ backgroundColor: colors.background }}
             >
-              <Text style={[styles.modalTitle, { color: colors.text }]}>
+              <Text className="text-lg font-semibold" style={{ color: colors.text }}>
                 Delete Playbook
               </Text>
-              <Text style={[styles.modalSubtitle, { color: colors.muted }]}>
+              <Text className="text-sm" style={{ color: colors.muted }}>
                 Are you sure you want to delete this playbook? This action
                 cannot be undone.
               </Text>
 
               <View
-                style={[
-                  styles.warningBox,
-                  { backgroundColor: colors.error + "20" },
-                ]}
+                className="p-4 rounded-lg bg-red-50"
               >
-                <Text style={[styles.warningText, { color: colors.error }]}>
+                <Text className="text-sm" style={{ color: colors.error }}>
                   Warning: Deleting "{playbook.name}" will permanently remove
                   all songs within this playbook.
                 </Text>
               </View>
 
-              <View style={styles.modalButtons}>
+              <View className="flex-row justify-end gap-3">
                 <Button
                   variant="outline"
                   onPress={() => setIsDeleteDialogOpen(false)}
-                  style={styles.modalButton}
                 >
                   <Text style={{ color: colors.text }}>Cancel</Text>
                 </Button>
                 <Button
                   variant="destructive"
                   onPress={handleDeletePlaybook}
-                  style={styles.modalButton}
                 >
-                  <Text style={styles.buttonText}>Delete Playbook</Text>
+                  <Text style={{ color: colors.text }}>Delete Playbook</Text>
                 </Button>
               </View>
             </View>
           </View>
         )}
       </View>
-    </MainLayout>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
-  header: {
-    marginBottom: 16,
-  },
-  titleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  backButton: {
-    marginRight: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    flex: 1,
-  },
-  optionsButton: {
-    padding: 8,
-  },
-  optionsMenu: {
-    position: "absolute",
-    right: 0,
-    top: 40,
-    width: 200,
-    borderRadius: 8,
-    borderWidth: 1,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    zIndex: 10,
-  },
-  optionItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 12,
-  },
-  optionText: {
-    marginLeft: 12,
-    fontSize: 14,
-  },
-  optionDivider: {
-    height: 1,
-    marginHorizontal: 12,
-  },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
-    gap: 12,
-  },
-  searchInputContainer: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    height: 40,
-    borderRadius: 8,
-    borderWidth: 1,
-    paddingHorizontal: 12,
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    height: 40,
-    fontSize: 16,
-  },
-  buttonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  listContent: {
-    paddingBottom: 16,
-  },
-  songCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    marginBottom: 12,
-  },
-  songIcon: {
-    marginRight: 12,
-  },
-  songInfo: {
-    flex: 1,
-  },
-  songTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 4,
-  },
-  songKey: {
-    fontSize: 14,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-  },
-  modalOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 16,
-    zIndex: 100,
-  },
-  modalContent: {
-    width: "100%",
-    borderRadius: 12,
-    padding: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 8,
-  },
-  modalSubtitle: {
-    fontSize: 16,
-    marginBottom: 24,
-  },
-  inputLabel: {
-    fontSize: 16,
-    fontWeight: "500",
-    marginBottom: 8,
-  },
-  input: {
-    height: 50,
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    marginBottom: 24,
-  },
-  warningBox: {
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 24,
-  },
-  warningText: {
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  modalButtons: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    gap: 12,
-  },
-  modalButton: {
-    minWidth: 100,
-  },
-});

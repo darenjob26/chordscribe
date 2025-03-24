@@ -5,7 +5,6 @@ import { Feather } from "@expo/vector-icons";
 import { usePathname, useRouter } from "expo-router";
 import {
   ScrollView,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -36,18 +35,21 @@ export function Sidebar({ onClose }: SidebarProps) {
 
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.background }]}
+      className="flex-1"
+      style={{ backgroundColor: colors.background }}
     >
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>ChordScribe</Text>
+      <View className="p-4 border-b border-gray-200">
+        <Text className="text-xl font-bold" style={{ color: colors.text }}>
+          ChordScribe
+        </Text>
       </View>
 
-      <ScrollView style={styles.scrollView}>
+      <ScrollView className="flex-1">
         {navItems.map((item) => (
           <TouchableOpacity
             key={item.path}
+            className="flex-row items-center p-4 rounded-lg mx-2 my-1"
             style={[
-              styles.navItem,
               pathname === item.path && {
                 backgroundColor: colors.primaryLight,
               },
@@ -56,16 +58,14 @@ export function Sidebar({ onClose }: SidebarProps) {
           >
             <Feather
               name={item.icon as any}
-              size={20}
+              size={18}
               color={pathname === item.path ? colors.primary : colors.text}
             />
             <Text
-              style={[
-                styles.navLabel,
-                {
-                  color: pathname === item.path ? colors.primary : colors.text,
-                },
-              ]}
+              className="ml-3 text-base"
+              style={{
+                color: pathname === item.path ? colors.primary : colors.text,
+              }}
             >
               {item.label}
             </Text>
@@ -73,31 +73,35 @@ export function Sidebar({ onClose }: SidebarProps) {
         ))}
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View className="p-4 border-t border-gray-200">
         {user && (
-          <View style={styles.userInfo}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>
+          <View className="flex-row items-center mb-4">
+            <View className="w-10 h-10 rounded-full bg-black justify-center items-center">
+              <Text className="text-white text-base font-bold">
                 {user.name ? user.name.charAt(0).toUpperCase() : "U"}
               </Text>
             </View>
-            <View style={styles.userTextContainer}>
+            <View className="ml-3 flex-1">
               <Text
-                style={[styles.userName, { color: colors.text }]}
+                className="font-semibold text-base"
+                style={{ color: colors.text }}
                 numberOfLines={1}
               >
                 {user.name || "User"}
               </Text>
-              <Text style={styles.userEmail} numberOfLines={1}>
+              <Text className="text-sm text-gray-500" numberOfLines={1}>
                 {user.email || ""}
               </Text>
             </View>
           </View>
         )}
 
-        <TouchableOpacity style={styles.logoutButton} onPress={signOut}>
+        <TouchableOpacity 
+          className="flex-row items-center p-3 rounded-lg border border-gray-200"
+          onPress={signOut}
+        >
           <Feather name="log-out" size={18} color={colors.text} />
-          <Text style={[styles.logoutText, { color: colors.text }]}>
+          <Text className="ml-2 text-sm" style={{ color: colors.text }}>
             Logout
           </Text>
         </TouchableOpacity>
@@ -105,80 +109,3 @@ export function Sidebar({ onClose }: SidebarProps) {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e5e5",
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  scrollView: {
-    flex: 1,
-  },
-  navItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
-    borderRadius: 8,
-    marginHorizontal: 8,
-    marginVertical: 4,
-  },
-  navLabel: {
-    marginLeft: 12,
-    fontSize: 16,
-  },
-  footer: {
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: "#e5e5e5",
-  },
-  userInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#6366f1",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  avatarText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  userTextContainer: {
-    marginLeft: 12,
-    flex: 1,
-  },
-  userName: {
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  userEmail: {
-    fontSize: 14,
-    color: "#6b7280",
-  },
-  logoutButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#e5e5e5",
-  },
-  logoutText: {
-    marginLeft: 8,
-    fontSize: 14,
-  },
-});
