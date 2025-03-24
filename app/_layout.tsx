@@ -5,6 +5,9 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import "react-native-reanimated";
+import { AuthProvider } from "@/providers/auth-provider";
+import "../global.css";
+import "./globals2.css";
 
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
@@ -45,5 +48,3 @@ export default function RootLayout() {
   );
 }
 
-import { AuthProvider } from "@/providers/auth-provider";
-import "./globals.css";
