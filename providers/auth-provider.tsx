@@ -19,6 +19,8 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   verifyOTP: (email: string, otp: string) => Promise<void>;
   resendOTP: (email: string) => Promise<void>;
+  updateProfile: (updates: Partial<User>) => Promise<void>;
+  updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -116,6 +118,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return;
   };
 
+  const updateProfile = async (updates: Partial<User>) => {
+    if (!user) throw new Error("No user logged in");
+
+    setIsLoading(true);
+    try {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      const updatedUser = { ...user, ...updates };
+      await AsyncStorage.setItem("user", JSON.stringify(updatedUser));
+      setUser(updatedUser);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updatePassword = async (currentPassword: string, newPassword: string) => {
+    if (!user) throw new Error("No user logged in");
+
+    setIsLoading(true);
+    try {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // In a real app, you would verify the current password and update it
+      // For now, we'll just return success
+      return;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -126,6 +160,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signOut,
         verifyOTP,
         resendOTP,
+        updateProfile,
+        updatePassword,
       }}
     >
       {children}
