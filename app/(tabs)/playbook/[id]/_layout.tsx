@@ -8,6 +8,7 @@ export default function PlaybookSongsLayout({
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="new-section" options={{ headerShown: false, presentation: 'modal' }} />
     </Stack>
   );
 }

@@ -1,3 +1,20 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.bg-primary {
+  background-color: #000;
+}
+
+.border-primary {
+  border-color: #000;
+}
+
+.text-primary {
+  color: #000;
+}
+
+.bg-primary-light {
+  background-color: #000;
+}
+
