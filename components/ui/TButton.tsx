@@ -1,7 +1,8 @@
 import { Feather } from '@expo/vector-icons';
 import React from 'react';
-import { TextInput, View, Text, ButtonProps, TouchableOpacity } from 'react-native';
+import { TextInput, View, Text, ButtonProps, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTheme } from '../theme-provider';
+import { cn } from '@/lib/utils';
 
 interface ThemedButtonProps extends ButtonProps {
     title: string;
@@ -17,55 +18,99 @@ export default function ThemedButton({ title, leftIcon, rightIcon, variant = "de
     const getButtonStyles = () => {
         switch (variant) {
             case "default":
-                return "bg-black";
+                return {
+                    backgroundColor: "#000000",
+                };
             case "outline":
-                return "bg-white border border-black";
+                return {
+                    backgroundColor: "#ffffff",
+                    borderColor: "#000000",
+                    borderWidth: 1,
+                };
             case "ghost":
-                return "bg-transparent";
+                return {
+                    backgroundColor: "transparent",
+                };
             case "destructive":
-                return "bg-red-500";
+                return {
+                    backgroundColor: "#ef4444",
+                };
         }
     }
 
     const getTextColor = () => {
         switch (variant) {
             case "default":
-                return "text-white";
+                return "#ffffff";
             case "outline":
-                return "text-black";
+                return "#000000";
             case "ghost":
-                return "text-black";
+                return "#000000";
             case "destructive":
-                return "text-white";
+                return "#ffffff";
         }
     }
 
-    const getTextSize = () => {
+    const getPadding = () => {
         switch (size) {
             case "sm":
-                return "text-md";
-            case "md":
-                return "text-lg";
+                return {
+                    paddingVertical: 8,
+                    paddingHorizontal: 16,
+                };
             case "lg":
-                return "text-xl";
+                return {
+                    paddingVertical: 12,
+                    paddingHorizontal: 24,
+                };
+            default:
+                return {
+                    paddingVertical: 10,
+                    paddingHorizontal: 20,
+                };
+        }
+    }
+
+    const getFontSize = () => {
+        switch (size) {
+            case "sm":
+                return 14;
+            case "lg":
+                return 18;
+            default:
+                return 16;
         }
     }
 
     return (
         <TouchableOpacity
-            className={`
-                flex-row items-center justify-center rounded-lg py-2.5 px-5 h-[50px]
-                ${getButtonStyles()}
-            `}
+            style={[
+                styles.button,
+                getPadding(),
+                getButtonStyles(),
+            ]}
             {...props}
         >
-            {leftIcon && <>{leftIcon}</>}
-            <Text className={`
-                font-medium 
-                ${getTextSize()}
-                ${getTextColor()}
-            `}>{title}</Text>
-            {rightIcon && <>{rightIcon}</>}
+            {leftIcon && <View style={styles.iconContainer}>{leftIcon}</View>}
+            <Text style={[
+                styles.text,
+                { color: getTextColor(), fontSize: getFontSize() }
+            ]}>{title}</Text>
+            {rightIcon && <View style={styles.iconContainer}>{rightIcon}</View>}
         </TouchableOpacity>
     );
 }
+const styles = StyleSheet.create({
+    button: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 8,
+    },
+    text: {
+        fontWeight: '500',
+    },
+    iconContainer: {
+        marginHorizontal: 4,
+    }
+});

@@ -8,6 +8,8 @@ import { MainLayout } from "@/components/layouts/main-layout"
 import { Button } from "@/components/ui/button"
 import { useTheme } from "@/components/theme-provider"
 import { Picker } from "@react-native-picker/picker"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
+import ThemedButton from "@/components/ui/TButton";
 
 // Types
 interface Chord {
@@ -39,7 +41,7 @@ export default function AddSongScreen() {
   const router = useRouter()
   const { id } = useLocalSearchParams<{ id: string }>()
   const { colors } = useTheme()
-
+  const insets = useSafeAreaInsets()
   const [songTitle, setSongTitle] = useState("")
   const [songKey, setSongKey] = useState("C")
   const [sections, setSections] = useState<Section[]>([
@@ -221,553 +223,303 @@ export default function AddSongScreen() {
     }
   }
 
+  const headerHeight = insets.top + 30;
+
   return (
-    <MainLayout>
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Feather name="arrow-left" size={24} color={colors.text} />
-          </TouchableOpacity>
-          <Text style={[styles.title, { color: colors.text }]}>Add New Song</Text>
+    <View className="flex-1 p-4" style={{ paddingTop: headerHeight }}>
+      <View className="flex-row items-center mb-4">
+        <TouchableOpacity className="mr-4" onPress={() => router.back()}>
+          <Feather name="arrow-left" size={24} color={colors.text} />
+        </TouchableOpacity>
+        <Text className="text-2xl font-bold" style={{ color: colors.text }}>Add New Song</Text>
+      </View>
+
+      <ScrollView
+        className="flex-1"
+        contentContainerClassName="pb-6"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Song Details */}
+        <View className="rounded-lg border mb-4 p-4" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
+          <Text className="text-lg font-bold mb-4" style={{ color: colors.text }}>Song Details</Text>
+
+          <View className="mb-4">
+            <Text className="text-base font-medium mb-2" style={{ color: colors.text }}>Song Title</Text>
+            <TextInput
+              className="h-[50px] border rounded-lg px-4 text-base"
+              style={{
+                borderColor: colors.border,
+                backgroundColor: colors.background,
+                color: colors.text,
+              }}
+              placeholder="Enter song title"
+              placeholderTextColor={colors.muted}
+              value={songTitle}
+              onChangeText={setSongTitle}
+            />
+          </View>
+
+          <View className="mb-4">
+            <Text className="text-base font-medium mb-2" style={{ color: colors.text }}>Original Key</Text>
+            <View
+              className="border rounded-lg h-[50px] justify-center"
+              style={{
+                borderColor: colors.border,
+                backgroundColor: colors.background,
+              }}
+            >
+              <Picker
+                itemStyle={{ height: 50 }}
+                selectedValue={songKey}
+                onValueChange={(itemValue) => setSongKey(itemValue)}
+                style={{ color: colors.text, backgroundColor: colors.background }}
+                dropdownIconColor={colors.text}
+              >
+                {KEY_OPTIONS.map((key) => (
+                  <Picker.Item key={key} label={key} value={key} />
+                ))}
+              </Picker>
+            </View>
+          </View>
         </View>
 
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Song Details */}
-          <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Text style={[styles.cardTitle, { color: colors.text }]}>Song Details</Text>
+        {/* Sections */}
+        <View className="mb-4">
+          <View className="flex-row justify-between items-center mb-4">
+            <Text className="text-lg font-bold" style={{ color: colors.text }}>Sections</Text>
 
-            <View style={styles.formGroup}>
-              <Text style={[styles.label, { color: colors.text }]}>Song Title</Text>
-              <TextInput
-                style={[
-                  styles.input,
-                  {
-                    borderColor: colors.border,
-                    backgroundColor: colors.background,
-                    color: colors.text,
-                  },
-                ]}
-                placeholder="Enter song title"
-                placeholderTextColor={colors.muted}
-                value={songTitle}
-                onChangeText={setSongTitle}
-              />
-            </View>
-
-            <View style={styles.formGroup}>
-              <Text style={[styles.label, { color: colors.text }]}>Original Key</Text>
-              <View
-                style={[
-                  styles.pickerContainer,
-                  {
-                    borderColor: colors.border,
-                    backgroundColor: colors.background,
-                  },
-                ]}
-              >
-                <Picker
-                  selectedValue={songKey}
-                  onValueChange={(itemValue) => setSongKey(itemValue)}
-                  style={{ color: colors.text }}
-                  dropdownIconColor={colors.text}
-                >
-                  {KEY_OPTIONS.map((key) => (
-                    <Picker.Item key={key} label={key} value={key} />
-                  ))}
-                </Picker>
-              </View>
-            </View>
+            <ThemedButton
+              onPress={handleAddSection}
+              leftIcon={<Feather name="plus" size={16} color="white" />}
+              title="Add Section"
+            />
           </View>
 
-          {/* Sections */}
-          <View style={styles.sectionsContainer}>
-            <View style={styles.sectionHeader}>
-              <Text style={[styles.cardTitle, { color: colors.text }]}>Sections</Text>
-              <Button onPress={handleAddSection} leftIcon={<Feather name="plus" size={16} color="white" />}>
-                <Text style={styles.buttonText}>Add Section</Text>
-              </Button>
-            </View>
+          {sections.map((section, sectionIndex) => (
+            <View
+              key={section.id}
+              className="rounded-lg border mb-3 overflow-hidden"
+              style={{ backgroundColor: colors.card, borderColor: colors.border }}
+            >
+              <TouchableOpacity className="flex-row justify-between items-center p-4" onPress={() => toggleSectionExpanded(section.id)}>
+                <View className="flex-1">
+                  <TextInput
+                    className="text-base font-medium"
+                    style={{ color: colors.text }}
+                    placeholder="Enter section name (e.g., Intro, Verse, Chorus)"
+                    placeholderTextColor={colors.muted}
+                    value={section.name}
+                    onChangeText={(text) => handleSectionNameChange(section.id, text)}
+                  />
+                </View>
+                <View className="flex-row items-center">
+                  <TouchableOpacity className="mr-4" onPress={() => handleDeleteSection(section.id)}>
+                    <Text style={{ color: colors.error }}>Delete</Text>
+                  </TouchableOpacity>
+                  <Feather
+                    name={expandedSections.includes(section.id) ? "chevron-up" : "chevron-down"}
+                    size={20}
+                    color={colors.text}
+                  />
+                </View>
+              </TouchableOpacity>
 
-            {sections.map((section, sectionIndex) => (
-              <View
-                key={section.id}
-                style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-              >
-                <TouchableOpacity style={styles.sectionHeader} onPress={() => toggleSectionExpanded(section.id)}>
-                  <View style={styles.sectionTitleContainer}>
-                    <TextInput
-                      style={[styles.sectionTitleInput, { color: colors.text }]}
-                      placeholder="Enter section name (e.g., Intro, Verse, Chorus)"
-                      placeholderTextColor={colors.muted}
-                      value={section.name}
-                      onChangeText={(text) => handleSectionNameChange(section.id, text)}
-                    />
-                  </View>
-                  <View style={styles.sectionActions}>
-                    <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteSection(section.id)}>
-                      <Text style={{ color: colors.error }}>Delete</Text>
-                    </TouchableOpacity>
-                    <Feather
-                      name={expandedSections.includes(section.id) ? "chevron-up" : "chevron-down"}
-                      size={20}
-                      color={colors.text}
-                    />
-                  </View>
-                </TouchableOpacity>
-
-                {expandedSections.includes(section.id) && (
-                  <View style={styles.sectionContent}>
-                    {section.lines.map((line, lineIndex) => (
-                      <View key={line.id} style={styles.lineContainer}>
-                        {/* Chord display */}
-                        {line.chords.length > 0 && (
-                          <View style={styles.chordContainer}>
-                            {line.chords.map((chord) => (
-                              <View
-                                key={chord.id}
-                                style={[styles.chordBadge, { backgroundColor: colors.primaryLight }]}
-                              >
-                                <Text style={{ color: colors.primary }}>{formatChordDisplay(chord)}</Text>
-                                <TouchableOpacity
-                                  onPress={() => handleDeleteChord(section.id, line.id, chord.id)}
-                                  style={styles.deleteChordButton}
-                                >
-                                  <Feather name="x" size={16} color={colors.muted} />
-                                </TouchableOpacity>
-                              </View>
-                            ))}
-                          </View>
-                        )}
-
-                        {/* Chord input */}
-                        <View style={styles.chordInputContainer}>
-                          <View style={styles.modeToggle}>
-                            <TouchableOpacity
-                              style={[
-                                styles.modeButton,
-                                isTimedMode && { backgroundColor: colors.primary },
-                                !isTimedMode && { borderColor: colors.border },
-                              ]}
-                              onPress={() => setIsTimedMode(true)}
-                            >
-                              <Text style={{ color: isTimedMode ? "white" : colors.text }}>Timed</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                              style={[
-                                styles.modeButton,
-                                !isTimedMode && { backgroundColor: colors.primary },
-                                isTimedMode && { borderColor: colors.border },
-                              ]}
-                              onPress={() => setIsTimedMode(false)}
-                            >
-                              <Text style={{ color: !isTimedMode ? "white" : colors.text }}>Standard</Text>
-                            </TouchableOpacity>
-                          </View>
-
-                          <View style={styles.chordPickers}>
+              {expandedSections.includes(section.id) && (
+                <View className="p-4 border-t border-gray-200">
+                  {section.lines.map((line, lineIndex) => (
+                    <View key={line.id} className="mb-4 gap-2">
+                      {/* Chord display */}
+                      {line.chords.length > 0 && (
+                        <View className="flex flex-row flex-wrap mb-2 gap-2">
+                          {line.chords.map((chord) => (
                             <View
-                              style={[
-                                styles.pickerSmall,
-                                {
-                                  borderColor: colors.border,
-                                  backgroundColor: colors.background,
-                                },
-                              ]}
+                              key={chord.id}
+                              className="flex flex-row items-center p-2 rounded-lg"
+                              style={{ backgroundColor: colors.primaryLight }}
                             >
-                              <Picker
-                                selectedValue={currentRoot}
-                                onValueChange={setCurrentRoot}
-                                style={{ color: colors.text }}
-                                dropdownIconColor={colors.text}
-                              >
-                                {CHORD_ROOTS.map((root) => (
-                                  <Picker.Item key={root} label={root} value={root} />
-                                ))}
-                              </Picker>
-                            </View>
-
-                            <View
-                              style={[
-                                styles.pickerSmall,
-                                {
-                                  borderColor: colors.border,
-                                  backgroundColor: colors.background,
-                                },
-                              ]}
-                            >
-                              <Picker
-                                selectedValue={currentQuality}
-                                onValueChange={setCurrentQuality}
-                                style={{ color: colors.text }}
-                                dropdownIconColor={colors.text}
-                              >
-                                {CHORD_QUALITIES.map((quality) => (
-                                  <Picker.Item key={quality} label={quality} value={quality} />
-                                ))}
-                              </Picker>
-                            </View>
-
-                            <View
-                              style={[
-                                styles.pickerSmall,
-                                {
-                                  borderColor: colors.border,
-                                  backgroundColor: colors.background,
-                                },
-                              ]}
-                            >
-                              <Picker
-                                selectedValue={currentInterval}
-                                onValueChange={setCurrentInterval}
-                                style={{ color: colors.text }}
-                                dropdownIconColor={colors.text}
-                              >
-                                {CHORD_INTERVALS.map((interval) => (
-                                  <Picker.Item key={interval} label={interval} value={interval} />
-                                ))}
-                              </Picker>
-                            </View>
-
-                            {isTimedMode && (
-                              <View
-                                style={[
-                                  styles.pickerSmall,
-                                  {
-                                    borderColor: colors.border,
-                                    backgroundColor: colors.background,
-                                  },
-                                ]}
-                              >
-                                <Picker
-                                  selectedValue={currentTiming.toString()}
-                                  onValueChange={(value) => setCurrentTiming(Number(value))}
-                                  style={{ color: colors.text }}
-                                  dropdownIconColor={colors.text}
-                                >
-                                  {[1, 2, 3, 4, 5, 6, 7, 8].map((seconds) => (
-                                    <Picker.Item
-                                      key={seconds.toString()}
-                                      label={`${seconds}s`}
-                                      value={seconds.toString()}
-                                    />
-                                  ))}
-                                </Picker>
-                              </View>
-                            )}
-                          </View>
-
-                          <View style={styles.lineActions}>
-                            <Button
-                              variant="outline"
-                              onPress={() => handleAddChord(section.id, line.id)}
-                              style={styles.actionButton}
-                            >
-                              <Text style={{ color: colors.text }}>Add Chord</Text>
-                            </Button>
-
-                            <Button
-                              variant="outline"
-                              onPress={() => handleAddLine(section.id)}
-                              style={styles.actionButton}
-                            >
-                              <Text style={{ color: colors.text }}>New Line</Text>
-                            </Button>
-
-                            {section.lines.length > 1 && (
+                              <Text className="text-sm font-medium text-primary">{formatChordDisplay(chord)}</Text>
                               <TouchableOpacity
-                                style={styles.deleteLineButton}
-                                onPress={() => handleDeleteLine(section.id, line.id)}
+                                className="ml-2"
+                                onPress={() => handleDeleteChord(section.id, line.id, chord.id)}
                               >
-                                <Feather name="trash-2" size={20} color={colors.error} />
+                                <Feather name="x" size={16} color={colors.muted} />
                               </TouchableOpacity>
-                            )}
+                            </View>
+                          ))}
+                        </View>
+                      )}
+
+                      {line.chords.length > 0 && (
+                        <View className="w-full border-[.5px] border-gray-300 my-2"></View>
+                      )}
+
+                      <View className="flex flex-row items-center justify-between">
+                        <View className="flex flex-row items-center rounded-lg gap-2">
+                          <ThemedButton
+                            size="sm"
+                            onPress={() => setIsTimedMode(false)}
+                            title="Standard"
+                            variant={!isTimedMode ? "default" : "outline"}
+                          />
+                          <ThemedButton
+                            size="sm"
+                            onPress={() => setIsTimedMode(true)}
+                            title="Timed"
+                            variant={isTimedMode ? "default" : "outline"}
+                          />
+                        </View>
+
+                        {section.lines.length > 1 && (
+                          <TouchableOpacity
+                            className="p-2"
+                            onPress={() => handleDeleteLine(section.id, line.id)}
+                          >
+                            <Feather name="trash-2" size={20} color={colors.error} />
+                          </TouchableOpacity>
+                        )}
+                      </View>
+
+                      {/* Chord input */}
+                      <View className="flex flex-row items-center gap-2">
+                        <View className="flex flex-row gap-2 w-full">
+
+                          <View className="border rounded-lg p-2 flex-1" >
+                            <Picker
+                              itemStyle={{ height: 40, fontSize: 12 }}
+                              selectedValue={currentRoot}
+                              onValueChange={setCurrentRoot}
+                              dropdownIconColor={colors.text}
+                            >
+                              {CHORD_ROOTS.map((root) => (
+                                <Picker.Item key={root} label={root} value={root} />
+                              ))}
+                            </Picker>
                           </View>
+
+                          <View className="border rounded-lg p-2 flex-1">
+                            <Picker
+                              itemStyle={{ height: 40, fontSize: 12 }}
+                              selectedValue={currentQuality}
+                              onValueChange={setCurrentQuality}
+                              style={{ color: colors.text }}
+                              dropdownIconColor={colors.text}
+                            >
+                              {CHORD_QUALITIES.map((quality) => (
+                                <Picker.Item key={quality} label={quality} value={quality} />
+                              ))}
+                            </Picker>
+                          </View>
+
+                          <View className="border rounded-lg p-2 flex-1">
+                            <Picker
+                              itemStyle={{ height: 40, fontSize: 12 }}
+                              selectedValue={currentInterval}
+                              onValueChange={setCurrentInterval}
+                              style={{ color: colors.text }}
+                              dropdownIconColor={colors.text}
+                            >
+                              {CHORD_INTERVALS.map((interval) => (
+                                <Picker.Item key={interval} label={interval} value={interval} />
+                              ))}
+                            </Picker>
+                          </View>
+
+                          {isTimedMode && (
+                            <View className="border rounded-lg p-2 flex-1">
+                              <Picker
+                                itemStyle={{ height: 40, fontSize: 12 }}
+                                selectedValue={currentTiming.toString()}
+                                onValueChange={(value) => setCurrentTiming(Number(value))}
+                                style={{ color: colors.text }}
+                                dropdownIconColor={colors.text}
+                              >
+                                {[1, 2, 3, 4, 5, 6, 7, 8].map((seconds) => (
+                                  <Picker.Item
+                                    key={seconds.toString()}
+                                    label={`${seconds}s`}
+                                    value={seconds.toString()}
+                                  />
+                                ))}
+                              </Picker>
+                            </View>
+                          )}
                         </View>
                       </View>
-                    ))}
-                  </View>
-                )}
-              </View>
-            ))}
-          </View>
+                      
+                      <View className="flex flex-row items-center gap-2">
+                        <ThemedButton
+                          size="sm"
+                          onPress={() => handleAddChord(section.id, line.id)}
+                          title="Add Chord"
+                        />
+                        {line.chords.length > 0 && <ThemedButton
+                          size="sm"
+                          variant="outline"
+                          onPress={() => handleAddLine(section.id)}
+                          title="New Line"
+                        />}
 
-          {/* Song Preview */}
-          <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Text style={[styles.cardTitle, { color: colors.text }]}>Song Preview</Text>
-
-            <View style={styles.previewHeader}>
-              <Text style={[styles.previewTitle, { color: colors.text }]}>{songTitle || "Untitled Song"}</Text>
-              <Text style={[styles.previewSubtitle, { color: colors.muted }]}>Key: {songKey}</Text>
-            </View>
-
-            <View style={styles.previewContent}>
-              {sections.map((section) => (
-                <View key={section.id} style={styles.previewSection}>
-                  <Text style={[styles.previewSectionName, { color: colors.primary }]}>
-                    {section.name || "Unnamed Section"}
-                  </Text>
-
-                  {section.lines.map((line) => (
-                    <View key={line.id} style={styles.previewLine}>
-                      {line.chords.length > 0 ? (
-                        isTimedMode ? (
-                          <View style={styles.previewTimedChords}>
-                            {line.chords.map((chord) => (
-                              <View key={chord.id} style={styles.previewTimedChord}>
-                                <Text style={[styles.previewChordText, { color: colors.text }]}>
-                                  {formatChordDisplay(chord)}
-                                </Text>
-                                {chord.timing && (
-                                  <View style={[styles.previewTimingBadge, { backgroundColor: colors.primary }]}>
-                                    <Text style={styles.previewTimingText}>{chord.timing}</Text>
-                                  </View>
-                                )}
-                              </View>
-                            ))}
-                          </View>
-                        ) : (
-                          <Text style={[styles.previewChordLine, { color: colors.text }]}>
-                            {line.chords.map((chord) => formatChordDisplay(chord)).join(" | ")}
-                          </Text>
-                        )
-                      ) : (
-                        <Text style={{ color: colors.muted, fontStyle: "italic" }}>No chords added</Text>
-                      )}
+                      </View>
                     </View>
                   ))}
                 </View>
-              ))}
+              )}
             </View>
+          ))}
+        </View>
+
+        {/* Song Preview */}
+        <View className="rounded-lg border mb-4 p-4" style={{ backgroundColor: colors.card, borderColor: colors.border }}>
+          <Text className="text-lg font-bold mb-4" style={{ color: colors.text }}>Song Preview</Text>
+
+          <View className="mb-4">
+            <Text className="text-base font-bold mb-2">{songTitle || "Untitled Song"}</Text>
+            <Text className="text-sm text-muted">Key: {songKey}</Text>
           </View>
 
-          <Button
-            onPress={handleSaveSong}
-            style={styles.saveButton}
-            leftIcon={<Feather name="save" size={18} color="white" />}
-          >
-            <Text style={styles.buttonText}>Save Song</Text>
-          </Button>
-        </ScrollView>
-      </View>
-    </MainLayout>
+          <View className="gap-4">
+            {sections.map((section) => (
+              <View key={section.id} className="gap-2">
+                <Text className="text-base font-medium">{section.name || "Unnamed Section"}</Text>
+
+                {section.lines.map((line) => (
+                  <View key={line.id} className="text-base">
+                    {line.chords.length > 0 ? (
+                      isTimedMode ? (
+                        <View className="flex flex-row flex-wrap gap-2">
+                          {line.chords.map((chord) => (
+                            <View key={chord.id} className="flex flex-row items-center gap-2">
+                              <Text className="text-base">{formatChordDisplay(chord)}</Text>
+                              {chord.timing && (
+                                <View className="flex items-center justify-center w-4 h-4 rounded-full" style={{ backgroundColor: colors.primary }}>
+                                  <Text className="text-xs text-white font-bold">{chord.timing}</Text>
+                                </View>
+                              )}
+                            </View>
+                          ))}
+                        </View>
+                      ) : (
+                        <Text className="text-base">{line.chords.map((chord) => formatChordDisplay(chord)).join(" | ")}</Text>
+                      )
+                    ) : (
+                      <Text className="text-sm text-muted italic">No chords added</Text>
+                    )}
+                  </View>
+                ))}
+              </View>
+            ))}
+          </View>
+        </View>
+
+        <Button
+          onPress={handleSaveSong}
+          className="mt-4"
+          leftIcon={<Feather name="save" size={18} color="white" />}
+        >
+          <Text className="text-white text-base font-medium">Save Song</Text>
+        </Button>
+      </ScrollView>
+    </View>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  backButton: {
-    marginRight: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 24,
-  },
-  card: {
-    borderRadius: 8,
-    borderWidth: 1,
-    padding: 16,
-    marginBottom: 16,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 16,
-  },
-  formGroup: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: "500",
-    marginBottom: 8,
-  },
-  input: {
-    height: 50,
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    fontSize: 16,
-  },
-  pickerContainer: {
-    borderWidth: 1,
-    borderRadius: 8,
-    height: 50,
-    justifyContent: "center",
-  },
-  sectionsContainer: {
-    marginBottom: 16,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  sectionCard: {
-    borderRadius: 8,
-    borderWidth: 1,
-    marginBottom: 12,
-    overflow: "hidden",
-  },
-  sectionTitleContainer: {
-    flex: 1,
-  },
-  sectionTitleInput: {
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  sectionActions: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  deleteButton: {
-    marginRight: 16,
-  },
-  sectionContent: {
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: "#e5e5e5",
-  },
-  lineContainer: {
-    marginBottom: 16,
-  },
-  chordContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginBottom: 8,
-    gap: 8,
-  },
-  chordBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  deleteChordButton: {
-    marginLeft: 4,
-  },
-  chordInputContainer: {
-    gap: 12,
-  },
-  modeToggle: {
-    flexDirection: "row",
-    marginBottom: 8,
-  },
-  modeButton: {
-    flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 4,
-    alignItems: "center",
-    borderWidth: 1,
-    marginHorizontal: 4,
-  },
-  chordPickers: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 12,
-  },
-  pickerSmall: {
-    borderWidth: 1,
-    borderRadius: 8,
-    height: 40,
-    width: 100,
-    justifyContent: "center",
-  },
-  lineActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  actionButton: {
-    flex: 1,
-  },
-  deleteLineButton: {
-    padding: 8,
-  },
-  previewHeader: {
-    marginBottom: 16,
-  },
-  previewTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  previewSubtitle: {
-    fontSize: 14,
-  },
-  previewContent: {
-    gap: 16,
-  },
-  previewSection: {
-    gap: 8,
-  },
-  previewSectionName: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  previewLine: {
-    marginBottom: 8,
-  },
-  previewChordLine: {
-    fontFamily: "monospace",
-    fontSize: 16,
-  },
-  previewTimedChords: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
-  },
-  previewTimedChord: {
-    position: "relative",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  previewChordText: {
-    fontFamily: "monospace",
-    fontSize: 16,
-  },
-  previewTimingBadge: {
-    position: "absolute",
-    top: -8,
-    right: -8,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  previewTimingText: {
-    color: "white",
-    fontSize: 10,
-    fontWeight: "bold",
-  },
-  saveButton: {
-    marginTop: 16,
-  },
-  buttonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "500",
-  },
-})
 
