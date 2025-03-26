@@ -9,31 +9,10 @@ import { Button } from "@/components/ui/button"
 import { useTheme } from "@/components/theme-provider"
 import { Picker } from "@react-native-picker/picker"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import ThemedButton from "@/components/ui/TButton";
+import ThemedButton from "@/components/ui/TButton"
 import { router as Router } from 'expo-router'
-
-// Types
-interface Chord {
-  id: string
-  root: string
-  quality: string
-  interval: string
-  timing?: number
-}
-
-interface Line {
-  id: string
-  chords: Chord[]
-}
-
-interface Section {
-  id: string
-  name: string
-  lines: Line[]
-}
-
-// Constants
-const KEY_OPTIONS = ["C", "C#", "Db", "D", "D#", "Eb", "E", "F", "F#", "Gb", "G", "G#", "Ab", "A", "A#", "Bb", "B"]
+import { Song, Section, Chord } from "@/types/chord"
+import { KEY_OPTIONS } from "@/constants/chords"
 
 export default function AddSongScreen() {
   const router = useRouter()
