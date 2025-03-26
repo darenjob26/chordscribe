@@ -33,9 +33,6 @@ interface Section {
 }
 
 // Constants
-const CHORD_ROOTS = ["C", "C#", "Db", "D", "D#", "Eb", "E", "F", "F#", "Gb", "G", "G#", "Ab", "A", "A#", "Bb", "B"]
-const CHORD_QUALITIES = ["maj", "min", "dim", "aug", "sus2", "sus4"]
-const CHORD_INTERVALS = ["none", "7", "maj7", "6", "9", "11", "13", "add9", "add11"]
 const KEY_OPTIONS = ["C", "C#", "Db", "D", "D#", "Eb", "E", "F", "F#", "Gb", "G", "G#", "Ab", "A", "A#", "Bb", "B"]
 
 export default function AddSongScreen() {

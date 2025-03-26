@@ -4,6 +4,7 @@ import { useRouter, useLocalSearchParams } from "expo-router"
 import { Feather } from "@expo/vector-icons"
 import { useTheme } from "@/components/theme-provider"
 import ThemedButton from "@/components/ui/TButton"
+import { Picker } from "@react-native-picker/picker"
 
 // Types
 interface Chord {
@@ -44,7 +45,7 @@ export default function NewSectionScreen() {
   const [lines, setLines] = useState<Line[]>([])
 
   // Current chord being built with defaults
-  const [selectedRoot, setSelectedRoot] = useState<string | null>(null)
+  const [selectedRoot, setSelectedRoot] = useState<string | null>("C")
   const [selectedQuality, setSelectedQuality] = useState<string>("maj")
   const [selectedInterval, setSelectedInterval] = useState<string>("none")
   const [selectedTiming, setSelectedTiming] = useState<number>(4)
@@ -66,7 +67,6 @@ export default function NewSectionScreen() {
     }))
 
     // Reset only root selection
-    setSelectedRoot(null)
     setSelectedQuality("maj")
     setSelectedInterval("none")
   }
@@ -156,25 +156,61 @@ export default function NewSectionScreen() {
           />
         </View>
 
-        {/* Mode Toggle */}
-        <View className="flex-row items-center gap-2 mb-6">
-          <ThemedButton
-            size="sm"
-            onPress={() => setIsTimedMode(false)}
-            title="Standard"
-            variant={!isTimedMode ? "default" : "outline"}
-          />
-          <ThemedButton
-            size="sm"
-            onPress={() => setIsTimedMode(true)}
-            title="Timed"
-            variant={isTimedMode ? "default" : "outline"}
-          />
-        </View>
-
         {/* Chord Builder */}
         <View className="mb-6">
-          <Text className="text-base font-medium mb-4" style={{ color: colors.text }}>Build Chord</Text>
+          <Text className="text-base font-medium mb-2" style={{ color: colors.text }}>Build Chord</Text>
+
+          {/* Mode Toggle */}
+          <View className="flex-row items-center gap-2 ">
+            <ThemedButton
+              size="sm"
+              onPress={() => setIsTimedMode(false)}
+              title="Standard"
+              variant={!isTimedMode ? "default" : "outline"}
+            />
+            <ThemedButton
+              size="sm"
+              onPress={() => setIsTimedMode(true)}
+              title="Timed"
+              variant={isTimedMode ? "default" : "outline"}
+            />
+          </View>
+
+          {/* Picker Chord builder */}
+          <View className="flex-row ">
+            <View className="flex-1">
+              <Picker
+                selectedValue={selectedRoot}
+                onValueChange={setSelectedRoot}
+              >
+                {CHORD_ROOTS.map(root => (
+                  <Picker.Item key={root} label={root} value={root} />
+                ))}
+              </Picker>
+            </View>
+            <View className="flex-1 ">
+              <Picker
+                selectionColor={"black"}
+                selectedValue={selectedQuality}
+                onValueChange={setSelectedQuality}
+              >
+                {CHORD_QUALITIES.map(quality => (
+                  <Picker.Item key={quality} label={quality} value={quality} />
+                ))}
+              </Picker>
+            </View>
+            <View className="flex-1 ">
+              <Picker
+                selectionColor={"black"}
+                selectedValue={selectedInterval}
+                onValueChange={setSelectedInterval}
+              >
+                {CHORD_INTERVALS.map(interval => (
+                  <Picker.Item key={interval} label={interval} value={interval} />
+                ))}
+              </Picker>
+            </View>
+          </View>
 
           {/* Timing (if in timed mode) */}
           {isTimedMode && (
@@ -193,58 +229,6 @@ export default function NewSectionScreen() {
               </View>
             </View>
           )}
-
-          <View className="flex-row mb-4">
-            {/* Root Notes (75%) */}
-            <View className="flex-1 mr-2">
-              <Text className="text-sm font-medium mb-2" style={{ color: colors.muted }}>Root Note</Text>
-              <View className="flex-row flex-wrap gap-2">
-                {CHORD_ROOTS.map(root => (
-                  <TouchableOpacity
-                    key={root}
-                    className={`py-2 px-3 rounded-lg border ${selectedRoot === root ? 'bg-primary border-primary' : 'border-border'}`}
-                    onPress={() => setSelectedRoot(root)}
-                  >
-                    <Text style={{ color: selectedRoot === root ? '#fff' : colors.text }}>{root}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-
-            <View className="flex-1">
-              {/* Qualities (25%) */}
-              <View className="mb-2">
-                <Text className="text-sm font-medium mb-2" style={{ color: colors.muted }}>Quality</Text>
-                <View className="flex-row flex-wrap gap-2">
-                  {CHORD_QUALITIES.map(quality => (
-                    <TouchableOpacity
-                      key={quality}
-                      className={`py-2 px-3 rounded-lg border ${selectedQuality === quality ? 'bg-primary border-primary' : 'border-border'}`}
-                      onPress={() => setSelectedQuality(quality)}
-                    >
-                      <Text style={{ color: selectedQuality === quality ? '#fff' : colors.text }}>{quality}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-
-              {/* Intervals */}
-              <View className="">
-                <Text className="text-sm font-medium mb-2" style={{ color: colors.muted }}>Interval</Text>
-                <View className="flex-row flex-wrap gap-2">
-                  {CHORD_INTERVALS.map(interval => (
-                    <TouchableOpacity
-                      key={interval}
-                      className={`py-2 px-3 rounded-lg border ${selectedInterval === interval ? 'bg-primary border-primary' : 'border-border'}`}
-                      onPress={() => setSelectedInterval(interval)}
-                    >
-                      <Text style={{ color: selectedInterval === interval ? '#fff' : colors.text }}>{interval}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-            </View>
-          </View>
 
           <View className="flex-row gap-2">
             <View className="flex-1">
@@ -294,32 +278,34 @@ export default function NewSectionScreen() {
         {lines.length > 0 && (
           <View className="mb-6">
             <Text className="text-base font-medium mb-2" style={{ color: colors.text }}>{sectionName} Preview</Text>
-            {lines.map((line, index) => (
-              <View key={line.id} className="p-4 border rounded-lg border-border mb-2">
-                <View className="flex-row justify-between items-center mb-2">
-                  <Text className="text-sm font-medium" style={{ color: colors.muted }}>Line {index + 1}</Text>
-                  <TouchableOpacity onPress={() => handleDeleteLine(line.id)}>
-                    <Feather name="trash-2" size={18} color={colors.error} />
-                  </TouchableOpacity>
+            <View className="p-4 border rounded-lg border-border">
+              {lines.map((line, index) => (
+                <View key={line.id} className="mb-2">
+                  <View className="flex-row justify-between items-center mb-2">
+                    <Text className="text-sm font-medium" style={{ color: colors.muted }}>Line {index + 1}</Text>
+                    <TouchableOpacity onPress={() => handleDeleteLine(line.id)}>
+                      <Feather name="trash-2" size={18} color={colors.error} />
+                    </TouchableOpacity>
+                  </View>
+                  <View className="flex-row flex-wrap gap-4">
+                    {line.chords.map(chord => (
+                      <View
+                        key={chord.id}
+                        className="flex-row items-center p-2 rounded-lg relative"
+                        style={{ backgroundColor: colors.primaryLight }}
+                      >
+                        <Text style={{ color: colors.primary }}>{formatChordDisplay(chord)}</Text>
+                        {chord.timing && (
+                          <View className="ml-1 w-4 h-4 rounded-full bg-primary items-center justify-center absolute -top-2 -right-2">
+                            <Text className="text-xs text-white">{chord.timing}</Text>
+                          </View>
+                        )}
+                      </View>
+                    ))}
+                  </View>
                 </View>
-                <View className="flex-row flex-wrap gap-4">
-                  {line.chords.map(chord => (
-                    <View
-                      key={chord.id}
-                      className="flex-row items-center p-2 rounded-lg relative"
-                      style={{ backgroundColor: colors.primaryLight }}
-                    >
-                      <Text style={{ color: colors.primary }}>{formatChordDisplay(chord)}</Text>
-                      {chord.timing && (
-                        <View className="ml-1 w-4 h-4 rounded-full bg-primary items-center justify-center absolute -top-2 -right-2">
-                          <Text className="text-xs text-white">{chord.timing}</Text>
-                        </View>
-                      )}
-                    </View>
-                  ))}
-                </View>
-              </View>
-            ))}
+              ))}
+            </View>
           </View>
         )}
       </ScrollView>
