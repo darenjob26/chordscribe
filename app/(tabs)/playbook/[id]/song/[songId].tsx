@@ -154,14 +154,19 @@ export default function SongDetailScreen() {
                       <View className="flex-row flex-wrap gap-3">
                         {line.chords.map((chord, index) => (
                           <View key={chord.id} className="flex-row items-center">
-                            <View className="relative px-2 py-1">
+                            <View className="relative px-1 py-2">
                               <Text className="font-mono text-2xl" style={{ color: "#FFC857" }}>{formatChordDisplay(chord)}</Text>
                               {chord.timing && (
-                                <View className="absolute inset-0 flex items-start justify-center flex-row -top-1 gap-2">
-                                  {Array.from({ length: chord.timing }).map((_, index) => (
-                                    <View key={index} className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                                <View className="absolute inset-0 flex-col-reverse items-center justify-end -top-2 gap-1">
+                                  {Array.from({ length: Math.ceil((chord.timing || 0) / 4) }).map((_, rowIndex) => (
+                                    <View key={rowIndex} className="flex-row gap-1">
+                                      {Array.from({ length: Math.min(4, (chord.timing || 0) - rowIndex * 4) }).map((_, dotIndex) => (
+                                        <View key={dotIndex} className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                                      ))}
+                                    </View>
                                   ))}
                                 </View>
+
                               )}
                             </View>
                             {index < line.chords.length - 1 && (

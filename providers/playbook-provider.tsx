@@ -30,8 +30,7 @@ const mockPlaybooks: Playbook[] = [
                     id: "1",
                     root: "G",
                     quality: "maj",
-                    interval: "none",
-                    timing: 2,
+                    interval: "none"
                   },
                   {
                     id: "2",
@@ -87,6 +86,18 @@ const mockPlaybooks: Playbook[] = [
                     quality: "maj",
                     interval: "none",
                   },
+                  {
+                    id: "9",
+                    root: "C",
+                    quality: "maj",
+                    interval: "none",
+                  },
+                  {
+                    id: "10",
+                    root: "C",
+                    quality: "maj",
+                    interval: "none",
+                  },
                 ],
               },
               {
@@ -97,21 +108,18 @@ const mockPlaybooks: Playbook[] = [
                     root: "G",
                     quality: "maj",
                     interval: "none",
-                    timing: 6,
                   },
                   {
                     id: "6",
                     root: "D",
                     quality: "maj",
                     interval: "none",
-                    timing: 6,
                   },
                   {
                     id: "7",
                     root: "E",
                     quality: "min",
                     interval: "none",
-                    timing: 3,
                   },
                   {
                     id: "8",
