@@ -1,13 +1,14 @@
 "use client";
 
 import { useTheme } from "@/components/theme-provider";
-import { Button } from "@/components/ui/button";
 import ThemedInput from "@/components/ui/Input";
 import ThemedButton from "@/components/ui/TButton";
 import { Feather } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
+  Alert,
+  Button,
   FlatList,
   Text,
   TextInput,
@@ -15,135 +16,15 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-// Mock data for playbooks and songs
-interface Song {
-  id: string;
-  title: string;
-  key: string;
-  content: string;
-}
-
-interface Playbook {
-  id: string;
-  name: string;
-  isDefault?: boolean;
-  songs: Song[];
-}
-
-// Mock data for playbooks and songs
-const mockPlaybooks: Record<string, Playbook> = {
-  default: {
-    id: "default",
-    name: "Your Songs",
-    isDefault: true,
-    songs: [
-      {
-        id: "1",
-        title: "Autumn Leaves",
-        key: "Em",
-        content: "Am7 | D7 | Gmaj7 | Cmaj7 | F#m7b5 | B7 | Em | Em",
-      },
-      {
-        id: "2",
-        title: "Blue Bossa",
-        key: "Cm",
-        content: "Cm7 | Cm7 | Fm7 | Fm7 | Dm7b5 | G7 | Cm7 | Cm7",
-      },
-      {
-        id: "3",
-        title: "All of Me",
-        key: "C",
-        content: "C | C | E7 | E7 | A7 | A7 | Dm | Dm",
-      },
-    ],
-  },
-  jazz: {
-    id: "jazz",
-    name: "Jazz Standards",
-    songs: [
-      {
-        id: "4",
-        title: "Take Five",
-        key: "Ebm",
-        content: "Ebm | Bbm7 | Ebm | Bbm7 | Ebm | Bbm7 | Ebm | Abm7 Db7",
-      },
-      {
-        id: "5",
-        title: "So What",
-        key: "D Dorian",
-        content: "Dm7 | Dm7 | Dm7 | Dm7 | Dm7 | Dm7 | Dm7 | Dm7",
-      },
-    ],
-  },
-  practice: {
-    id: "practice",
-    name: "Practice Routines",
-    songs: [
-      {
-        id: "6",
-        title: "Major Scales",
-        key: "C",
-        content: "C | D | E | F | G | A | B | C",
-      },
-      {
-        id: "7",
-        title: "Minor Scales",
-        key: "Am",
-        content: "Am | Bm | Cm | Dm | Em | Fm | Gm | Am",
-      },
-    ],
-  },
-  gigs: {
-    id: "gigs",
-    name: "Upcoming Gigs",
-    songs: [
-      {
-        id: "8",
-        title: "Wedding Set",
-        key: "G",
-        content: "G | D | Em | C | G | D | C | G",
-      },
-      {
-        id: "9",
-        title: "Jazz Club Set",
-        key: "C",
-        content: "Dm7 | G7 | Cmaj7 | Cmaj7 | Fm7 | Bb7 | Ebmaj7 | Ebmaj7",
-      },
-    ],
-  },
-  pop: {
-    id: "pop",
-    name: "Pop Hits",
-    songs: [
-      {
-        id: "10",
-        title: "Wonderwall",
-        key: "F#m",
-        content: "Em7 | G | D | A7sus4 | Em7 | G | D | A7sus4",
-      },
-      {
-        id: "11",
-        title: "Perfect",
-        key: "G",
-        content: "G | Em | C | D | G | Em | C | D | Em | C | G | D",
-      },
-      {
-        id: "12",
-        title: "Someone Like You",
-        key: "A",
-        content:
-          "A | E/G# | F#m | D | A | E/G# | F#m | D | E | F#m | D | A | E",
-      },
-    ],
-  },
-};
+import { usePlaybook } from "@/providers/playbook-provider";
+import { Playbook } from "@/types/playbook";
 
 export default function PlaybookDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const { getPlaybook, updatePlaybook, deletePlaybook, isLoading } = usePlaybook();
 
   const [playbook, setPlaybook] = useState<Playbook | null>(null);
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
@@ -153,28 +34,42 @@ export default function PlaybookDetailScreen() {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    // In a real app, you would fetch the playbook data from an API
-    const foundPlaybook = mockPlaybooks[id as string];
-    if (foundPlaybook) {
-      setPlaybook(foundPlaybook);
-      setNewPlaybookName(foundPlaybook.name);
-    }
+    loadPlaybook();
   }, [id]);
 
-  const handleRenamePlaybook = () => {
-    if (playbook && newPlaybookName.trim()) {
-      // In a real app, you would update the playbook name via an API
-      setPlaybook({
-        ...playbook,
-        name: newPlaybookName,
-      });
-      setIsRenameDialogOpen(false);
+  const loadPlaybook = async () => {
+    try {
+      const loadedPlaybook = await getPlaybook(id);
+      if (loadedPlaybook) {
+        setPlaybook(loadedPlaybook);
+        setNewPlaybookName(loadedPlaybook.name);
+      }
+    } catch (error) {
+      console.error("Failed to load playbook:", error);
     }
   };
 
-  const handleDeletePlaybook = () => {
-    // In a real app, you would delete the playbook via an API
-    router.replace("/playbook/index");
+  const handleRenamePlaybook = async () => {
+    if (playbook && newPlaybookName.trim() && playbook.id !== "default") {
+      try {
+        const updatedPlaybook = await updatePlaybook(playbook.id, { name: newPlaybookName });
+        setPlaybook(updatedPlaybook);
+        setIsRenameDialogOpen(false);
+      } catch (error) {
+        Alert.alert("Error", "Failed to rename playbook");
+      }
+    }
+  };
+
+  const handleDeletePlaybook = async () => {
+    if (playbook && playbook.id !== "default") {
+      try {
+        await deletePlaybook(playbook.id);
+        router.replace("/playbook/index");
+      } catch (error) {
+        Alert.alert("Error", "Failed to delete playbook");
+      }
+    }
     setIsDeleteDialogOpen(false);
   };
 
@@ -182,6 +77,14 @@ export default function PlaybookDetailScreen() {
     playbook?.songs.filter((song) =>
       song.title.toLowerCase().includes(searchQuery.toLowerCase())
     ) || [];
+
+  if (isLoading) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <Text style={{ color: colors.text }}>Loading playbook...</Text>
+      </View>
+    );
+  }
 
   if (!playbook) {
     return (
@@ -211,48 +114,39 @@ export default function PlaybookDetailScreen() {
             {playbook.name}
           </Text>
 
-          {!playbook.isDefault && (
-            <TouchableOpacity
-              className="p-2"
-              onPress={() => setIsOptionsMenuOpen(!isOptionsMenuOpen)}
-            >
-              <Feather name="more-horizontal" size={24} color={colors.text} />
-            </TouchableOpacity>
-          )}
+          {playbook.id !== "default" && <TouchableOpacity
+            className="p-2"
+            onPress={() => setIsOptionsMenuOpen(!isOptionsMenuOpen)}
+          >
+            <Feather name="more-horizontal" size={24} color={colors.text} />
+          </TouchableOpacity> }
         </View>
 
-        {isOptionsMenuOpen && !playbook.isDefault && (
+        {isOptionsMenuOpen && playbook.id !== "default" && (
           <View
-            className="absolute right-0 top-10 w-40 rounded-lg border border-gray-300 bg-white shadow-md"
+            className="gap-2 p-2 absolute right-10 top-10 w-40 rounded-lg border border-gray-300 bg-white shadow-md z-10"
             style={{ backgroundColor: colors.card, borderColor: colors.border }}
           >
-            <TouchableOpacity
-              className="flex-row items-center p-2"
+            <ThemedButton
+              size="sm"
+              variant="outline"
+              title="Rename"
               onPress={() => {
                 setIsRenameDialogOpen(true);
                 setIsOptionsMenuOpen(false);
               }}
-            >
-              <Feather name="edit-2" size={16} color={colors.text} />
-              <Text className="ml-2" style={{ color: colors.text }}>
-                Rename Playbook
-              </Text>
-            </TouchableOpacity>
-            <View
-              className="h-px bg-gray-300"
+              leftIcon={<Feather name="edit-2" size={16} color={colors.text} />}
             />
-            <TouchableOpacity
-              className="flex-row items-center p-2"
+            <ThemedButton
+              size="sm"
+              variant="destructive"
+              title="Delete"
               onPress={() => {
-                setIsDeleteDialogOpen(true);
+                setIsDeleteDialogOpen(true);  
                 setIsOptionsMenuOpen(false);
               }}
-            >
-              <Feather name="trash-2" size={16} color={colors.error} />
-              <Text className="ml-2" style={{ color: colors.error }}>
-                Delete Playbook
-              </Text>
-            </TouchableOpacity>
+              leftIcon={<Feather name="trash-2" size={16} color={colors.primaryLight} />}
+            />
           </View>
         )}
       </View>
@@ -278,7 +172,7 @@ export default function PlaybookDetailScreen() {
               onChangeText={setSearchQuery}
             />
           </View>
-          <ThemedButton 
+          <ThemedButton
             title="Add Song"
             onPress={() => router.push(`/playbook/${id}/add-song` as any)}
             leftIcon={<Feather name="plus" size={18} color="white" />}
@@ -329,97 +223,93 @@ export default function PlaybookDetailScreen() {
             </Text>
           </View>
         )}
-
-        {/* Rename Dialog */}
-        {isRenameDialogOpen && (
-          <View className="absolute inset-0 justify-center items-center">
-            <View
-              className="w-full rounded-lg p-4"
-              style={{ backgroundColor: colors.background }}
-            >
-              <Text className="text-lg font-semibold" style={{ color: colors.text }}>
-                Rename Playbook
-              </Text>
-              <Text className="text-sm" style={{ color: colors.muted }}>
-                Change the name of your playbook.
-              </Text>
-
-              <Text className="text-sm" style={{ color: colors.text }}>
-                Playbook Name
-              </Text>
-              <TextInput
-                className="h-10 rounded-lg border border-gray-300 bg-white"
-                style={{ color: colors.text }}
-                placeholder="My Playbook"
-                placeholderTextColor={colors.muted}
-                value={newPlaybookName}
-                onChangeText={setNewPlaybookName}
-                autoFocus
-              />
-
-
-              <View className="flex-row justify-end gap-3">
-                <Button
-                  variant="outline"
-                  onPress={() => {
-                    setIsRenameDialogOpen(false);
-                    setNewPlaybookName(playbook.name);
-                  }}
-                >
-                  <Text style={{ color: colors.text }}>Cancel</Text>
-                </Button>
-                <Button
-                  onPress={handleRenamePlaybook}
-                >
-                  <Text style={{ color: colors.text }}>Save Changes</Text>
-                </Button>
-              </View>
-            </View>
-          </View>
-        )}
-
-        {/* Delete Confirmation Dialog */}
-        {isDeleteDialogOpen && (
-          <View className="absolute inset-0 justify-center items-center">
-            <View
-              className="w-full rounded-lg p-4"
-              style={{ backgroundColor: colors.background }}
-            >
-              <Text className="text-lg font-semibold" style={{ color: colors.text }}>
-                Delete Playbook
-              </Text>
-              <Text className="text-sm" style={{ color: colors.muted }}>
-                Are you sure you want to delete this playbook? This action
-                cannot be undone.
-              </Text>
-
-              <View
-                className="p-4 rounded-lg bg-red-50"
-              >
-                <Text className="text-sm" style={{ color: colors.error }}>
-                  Warning: Deleting "{playbook.name}" will permanently remove
-                  all songs within this playbook.
-                </Text>
-              </View>
-
-              <View className="flex-row justify-end gap-3">
-                <Button
-                  variant="outline"
-                  onPress={() => setIsDeleteDialogOpen(false)}
-                >
-                  <Text style={{ color: colors.text }}>Cancel</Text>
-                </Button>
-                <Button
-                  variant="destructive"
-                  onPress={handleDeletePlaybook}
-                >
-                  <Text style={{ color: colors.text }}>Delete Playbook</Text>
-                </Button>
-              </View>
-            </View>
-          </View>
-        )}
       </View>
+
+      {/* Rename Dialog */}
+      {isRenameDialogOpen && playbook.id !== "default" && (
+        <View className="absolute inset-0 bg-black/50 justify-center items-center">
+          <View
+            className="w-[90%] rounded-lg p-6"
+            style={{ backgroundColor: colors.background }}
+          >
+            <Text className="text-xl font-semibold mb-2" style={{ color: colors.text }}>
+              Rename Playbook
+            </Text>
+            <Text className="text-sm mb-4" style={{ color: colors.muted }}>
+              Change the name of your playbook.
+            </Text>
+
+            <Text className="text-sm mb-2" style={{ color: colors.text }}>
+              Playbook Name
+            </Text>
+            <TextInput
+              className="h-12 rounded-lg border border-gray-300 bg-white px-4 mb-4"
+              style={{ color: colors.text, borderColor: colors.border }}
+              placeholder="My Playbook"
+              placeholderTextColor={colors.muted}
+              value={newPlaybookName}
+              onChangeText={setNewPlaybookName}
+              autoFocus
+            />
+
+            <View className="flex-row justify-end gap-3">
+              <ThemedButton
+                title="Cancel"
+                variant="outline"
+                onPress={() => {
+                  setIsRenameDialogOpen(false);
+                  setNewPlaybookName(playbook.name);
+                }}
+              />
+              <ThemedButton
+                title="Save"
+                onPress={handleRenamePlaybook}
+              />
+            </View>
+          </View>
+        </View>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {isDeleteDialogOpen && playbook.id !== "default" && (
+        <View className="absolute inset-0 bg-black/50 justify-center items-center">
+          <View
+            className="w-[90%] rounded-lg p-6"
+            style={{ backgroundColor: colors.background }}
+          >
+            <Text className="text-xl font-semibold mb-2" style={{ color: colors.text }}>
+              Delete Playbook
+            </Text>
+            <Text className="text-sm mb-4" style={{ color: colors.muted }}>
+              Are you sure you want to delete this playbook? This action
+              cannot be undone.
+            </Text>
+
+            <View
+              className="p-4 rounded-lg mb-4"
+              style={{ backgroundColor: colors.error + '20' }}
+            >
+              <Text className="text-sm" style={{ color: colors.error }}>
+                Warning: Deleting "{playbook.name}" will permanently remove
+                all songs within this playbook.
+              </Text>
+            </View>
+
+            <View className="flex-row justify-end gap-3">
+              <ThemedButton
+                title="Cancel"
+                variant="outline"
+                onPress={() => setIsDeleteDialogOpen(false)}
+              />
+              <ThemedButton   
+                title="Delete"
+                variant="destructive"
+                onPress={handleDeletePlaybook}
+              />
+            </View>
+          </View>
+        </View>
+      )}
     </View>
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import { useTheme } from "@/components/theme-provider";
-import { Button } from "@/components/ui/button";
 import ThemedButton from "@/components/ui/TButton";
 import ThemedInput from "@/components/ui/Input";
 import { Feather } from "@expo/vector-icons";
@@ -16,63 +15,27 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-// Mock data for playbooks
-interface Playbook {
-  id: string;
-  name: string;
-  songCount: number;
-  isDefault?: boolean;
-}
-
-const initialPlaybooks: Playbook[] = [
-  {
-    id: "default",
-    name: "Your Songs",
-    songCount: 12,
-    isDefault: true,
-  },
-  {
-    id: "jazz",
-    name: "Jazz Standards",
-    songCount: 8,
-  },
-  {
-    id: "practice",
-    name: "Practice Routines",
-    songCount: 5,
-  },
-  {
-    id: "gigs",
-    name: "Upcoming Gigs",
-    songCount: 3,
-  },
-  {
-    id: "pop",
-    name: "Pop Hits",
-    songCount: 3,
-  },
-];
+import { usePlaybook } from "@/providers/playbook-provider";
+import { Playbook } from "@/types/playbook";
 
 export default function PlaybookScreen() {
   const router = useRouter();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const { playbooks, createPlaybook, isLoading } = usePlaybook();
 
-  const [playbooks, setPlaybooks] = useState<Playbook[]>(initialPlaybooks);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newPlaybookName, setNewPlaybookName] = useState("");
 
-  const handleAddPlaybook = () => {
+  const handleAddPlaybook = async () => {
     if (newPlaybookName.trim()) {
-      const newPlaybook: Playbook = {
-        id: `playbook-${Date.now()}`,
-        name: newPlaybookName,
-        songCount: 0,
-      };
-      setPlaybooks([...playbooks, newPlaybook]);
-      setNewPlaybookName("");
-      setIsAddDialogOpen(false);
+      try {
+        await createPlaybook({ name: newPlaybookName });
+        setNewPlaybookName("");
+        setIsAddDialogOpen(false);
+      } catch (error) {
+        Alert.alert("Error", "Failed to create playbook");
+      }
     } else {
       Alert.alert("Error", "Please enter a playbook name");
     }
@@ -98,12 +61,12 @@ export default function PlaybookScreen() {
           >
             {item.name}
           </Text>
-          {item.isDefault && (
+          {item.id === "default" && (
             <Feather name="lock" size={14} color={colors.muted} />
           )}
         </View>
         <Text className="text-md" style={{ color: colors.muted }}>
-          {item.songCount} {item.songCount === 1 ? "song" : "songs"}
+          {item.songs.length} {item.songs.length === 1 ? "song" : "songs"}
         </Text>
       </View>
       <Feather name="chevron-right" size={20} color={colors.muted} />
@@ -111,6 +74,14 @@ export default function PlaybookScreen() {
   );
 
   const headerHeight = insets.top + 30;
+  
+  if (isLoading) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <Text style={{ color: colors.text }}>Loading playbooks...</Text>
+      </View>
+    );
+  }
   
   return (
     <View className="flex-1 p-4" style={{ paddingTop: headerHeight }}>
