@@ -1,12 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native"
+import { View, Text, ScrollView, TouchableOpacity } from "react-native"
 import { useRouter, useLocalSearchParams } from "expo-router"
 import { Feather } from "@expo/vector-icons"
-import { MainLayout } from "@/components/layouts/main-layout"
-import { Button } from "@/components/ui/button"
 import { useTheme } from "@/components/theme-provider"
+import ThemedButton from "@/components/ui/TButton"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { usePlaybook } from "@/providers/playbook-provider"
 
 // Types
 interface Chord {
@@ -14,7 +15,7 @@ interface Chord {
   root: string
   quality: string
   interval: string
-  timing?: string
+  timing?: number
 }
 
 interface Line {
@@ -36,62 +37,12 @@ interface Song {
   content?: string // For backward compatibility with mock data
 }
 
-interface Playbook {
-  id: string
-  name: string
-  isDefault?: boolean
-  songs: Song[]
-}
-
-// Mock data for playbooks and songs
-const mockPlaybooks: Record<string, Playbook> = {
-  default: {
-    id: "default",
-    name: "Your Songs",
-    isDefault: true,
-    songs: [
-      {
-        id: "1",
-        title: "Autumn Leaves",
-        key: "Em",
-        content: "Am7 | D7 | Gmaj7 | Cmaj7 | F#m7b5 | B7 | Em | Em",
-        sections: [
-          {
-            id: "section-1",
-            name: "A Section",
-            lines: [
-              {
-                id: "line-1",
-                chords: [
-                  { id: "chord-1", root: "A", quality: "m", interval: "7" },
-                  { id: "chord-2", root: "D", quality: "", interval: "7" },
-                  { id: "chord-3", root: "G", quality: "maj", interval: "7" },
-                  { id: "chord-4", root: "C", quality: "maj", interval: "7" },
-                ],
-              },
-              {
-                id: "line-2",
-                chords: [
-                  { id: "chord-5", root: "F#", quality: "m", interval: "7b5" },
-                  { id: "chord-6", root: "B", quality: "", interval: "7" },
-                  { id: "chord-7", root: "E", quality: "m", interval: "" },
-                  { id: "chord-8", root: "E", quality: "m", interval: "" },
-                ],
-              },
-            ],
-          },
-        ],
-      },
-      // Other songs...
-    ],
-  },
-  // Other playbooks...
-}
-
 export default function SongDetailScreen() {
   const router = useRouter()
   const { id, songId } = useLocalSearchParams<{ id: string; songId: string }>()
   const { colors, isDark } = useTheme()
+  const insets = useSafeAreaInsets()
+  const { getPlaybook } = usePlaybook()
 
   const [song, setSong] = useState<Song | null>(null)
   const [playbookName, setPlaybookName] = useState("")
@@ -99,16 +50,23 @@ export default function SongDetailScreen() {
   const [isPlaying, setIsPlaying] = useState(false)
 
   useEffect(() => {
-    // In a real app, you would fetch the song data from an API
-    const playbook = mockPlaybooks[id as string]
-    if (playbook) {
-      setPlaybookName(playbook.name)
-      const foundSong = playbook.songs.find((s) => s.id === songId)
-      if (foundSong) {
-        setSong(foundSong)
-      }
-    }
+    loadSong()
   }, [id, songId])
+
+  const loadSong = async () => {
+    try {
+      const playbook = await getPlaybook(id)
+      if (playbook) {
+        setPlaybookName(playbook.name)
+        const foundSong = playbook.songs.find((s) => s.id === songId)
+        if (foundSong) {
+          setSong(foundSong)
+        }
+      }
+    } catch (error) {
+      console.error("Failed to load song:", error)
+    }
+  }
 
   const handleDeleteSong = () => {
     // In a real app, you would delete the song via an API
@@ -133,263 +91,127 @@ export default function SongDetailScreen() {
 
   if (!song) {
     return (
-      <MainLayout>
-        <View style={styles.container}>
-          <Text>Song not found</Text>
-        </View>
-      </MainLayout>
+      <View className="flex-1 justify-center items-center gap-2">
+        <Text>Song not found</Text>
+        <ThemedButton size="sm" title="Go back" onPress={() => router.back()} />
+      </View>
     )
   }
 
-  return (
-    <MainLayout>
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <View style={styles.titleRow}>
-            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-              <Feather name="arrow-left" size={24} color={colors.text} />
-            </TouchableOpacity>
-            <View style={styles.titleContainer}>
-              <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
-                {song.title}
-              </Text>
-              <Text style={[styles.subtitle, { color: colors.muted }]}>Key: {song.key}</Text>
-            </View>
-            <Feather name="music" size={24} color={colors.primary} />
-          </View>
+  const headerHeight = insets.top + 30
 
-          <View style={styles.actionButtons}>
-            <Button
-              variant="outline"
-              onPress={() => router.push(`/playbook/${id}/edit-song/${songId}`)}
-              leftIcon={<Feather name="edit-2" size={16} color={colors.text} />}
-              style={styles.actionButton}
-            >
-              <Text style={{ color: colors.text }}>Edit Song</Text>
-            </Button>
-            <Button
-              variant="outline"
-              onPress={() => setIsDeleteDialogOpen(true)}
-              leftIcon={<Feather name="trash-2" size={16} color={colors.error} />}
-              style={styles.actionButton}
-            >
-              <Text style={{ color: colors.error }}>Delete</Text>
-            </Button>
+  return (
+    <View className="flex-1 p-4" style={{ paddingTop: headerHeight }}>
+      <View className="mb-8">
+        <View className="flex-row items-center mb-4">
+          <TouchableOpacity className="mr-4" onPress={() => router.back()}>
+            <Feather name="arrow-left" size={24} color={colors.text} />
+          </TouchableOpacity>
+          <View className="flex-1">
+            <Text className="text-2xl font-bold" style={{ color: colors.text }} numberOfLines={1}>
+              {song.title}
+            </Text>
+            <Text className="text-base" style={{ color: colors.muted }}>Key: {song.key}</Text>
           </View>
+          <Feather name="music" size={24} color={colors.primary} />
         </View>
 
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={[styles.songCard, { backgroundColor: isDark ? "#1a1a2e" : "#1a1a2e" }]}>
-            <ScrollView contentContainerStyle={styles.songContent}>
-              {song.sections.map((section) => (
-                <View key={section.id} style={styles.section}>
-                  <Text style={[styles.sectionName, { color: "#78E3FD" }]}>{section.name}</Text>
+        <View className="flex-row gap-3">
+          <View className="flex-1">
+            <ThemedButton
+              variant="outline"
+              title="Edit Song"
+              onPress={() => router.push(`/playbook/${id}/edit-song/${songId}`)}
+              leftIcon={<Feather name="edit-2" size={16} color={colors.text} />}
+            />
+          </View>
+          <View className="flex-1">
+            <ThemedButton
+              variant="outline"
+              title="Delete"
+              onPress={() => setIsDeleteDialogOpen(true)}
+              leftIcon={<Feather name="trash-2" size={16} color={colors.error} />}
+            />
+          </View>
+        </View>
+      </View>
 
-                  {section.lines.map((line) => (
-                    <View key={line.id} style={styles.line}>
-                      {line.chords.some((chord) => chord.timing) ? (
-                        <View style={styles.timedChords}>
-                          {line.chords.map((chord) => (
-                            <View key={chord.id} style={styles.timedChord}>
-                              <Text style={styles.chordText}>{formatChordDisplay(chord)}</Text>
+      {/* Chord Progression Preview */}
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ paddingBottom: 24 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <View className="rounded-xl overflow-hidden mb-4" style={{ backgroundColor: isDark ? "#1a1a2e" : "#1a1a2e" }}>
+          <ScrollView className="p-4">
+            {song.sections.map((section) => (
+              <View key={section.id} className="mb-6">
+                <Text className="text-xl font-bold mb-3" style={{ color: "#78E3FD" }}>{section.name}</Text>
+
+                {section.lines.map((line) => (
+                  <View key={line.id} className="mb-3">
+                    {line.chords.some((chord) => chord.timing) ? (
+                      <View className="flex-row flex-wrap gap-3">
+                        {line.chords.map((chord, index) => (
+                          <View key={chord.id} className="flex-row items-center">
+                            <View className="relative px-2 py-1">
+                              <Text className="font-mono text-2xl" style={{ color: "#FFC857" }}>{formatChordDisplay(chord)}</Text>
                               {chord.timing && (
-                                <View style={styles.timingBadge}>
-                                  <Text style={styles.timingText}>{chord.timing}</Text>
+                                <View className="absolute inset-0 flex items-start justify-center flex-row -top-1 gap-2">
+                                  {Array.from({ length: chord.timing }).map((_, index) => (
+                                    <View key={index} className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                                  ))}
                                 </View>
                               )}
                             </View>
-                          ))}
-                        </View>
-                      ) : (
-                        <Text style={styles.chordLine}>
-                          {line.chords.map((chord) => formatChordDisplay(chord)).join(" | ")}
-                        </Text>
-                      )}
-                    </View>
-                  ))}
-                </View>
-              ))}
-            </ScrollView>
-          </View>
+                            {index < line.chords.length - 1 && (
+                              <Text className="font-mono text-2xl mx-2" style={{ color: "#FFC857" }}>|</Text>
+                            )}
+                          </View>
+                        ))}
+                      </View>
+                    ) : (
+                      <Text className="font-mono text-2xl" style={{ color: "#FFC857" }}>
+                        {line.chords.map((chord) => formatChordDisplay(chord)).join(" | ")}
+                      </Text>
+                    )}
+                  </View>
+                ))}
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+      </ScrollView>
 
-          <Button
-            onPress={() => setIsPlaying(!isPlaying)}
-            leftIcon={<Feather name={isPlaying ? "pause" : "play"} size={18} color="white" />}
-            style={styles.playButton}
-          >
-            <Text style={styles.buttonText}>{isPlaying ? "Stop Playback" : "Play Progression"}</Text>
-          </Button>
-        </ScrollView>
+      {/* Delete Confirmation Dialog */}
+      {isDeleteDialogOpen && (
+        <View className="absolute inset-0 bg-black/50 justify-center items-center p-4">
+          <View className="w-full rounded-xl p-6" style={{ backgroundColor: colors.background }}>
+            <Text className="text-xl font-bold mb-2" style={{ color: colors.text }}>Delete Song</Text>
+            <Text className="text-base mb-6" style={{ color: colors.muted }}>
+              Are you sure you want to delete "{song.title}"? This action cannot be undone.
+            </Text>
 
-        {/* Delete Confirmation Dialog */}
-        {isDeleteDialogOpen && (
-          <View style={styles.modalOverlay}>
-            <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
-              <Text style={[styles.modalTitle, { color: colors.text }]}>Delete Song</Text>
-              <Text style={[styles.modalSubtitle, { color: colors.muted }]}>
-                Are you sure you want to delete "{song.title}"? This action cannot be undone.
-              </Text>
-
-              <View style={styles.modalButtons}>
-                <Button variant="outline" onPress={() => setIsDeleteDialogOpen(false)} style={styles.modalButton}>
-                  <Text style={{ color: colors.text }}>Cancel</Text>
-                </Button>
-                <Button variant="destructive" onPress={handleDeleteSong} style={styles.modalButton}>
-                  <Text style={styles.buttonText}>Delete Song</Text>
-                </Button>
+            <View className="flex-row justify-end gap-3">
+              <View style={{ minWidth: 100 }}>
+                <ThemedButton
+                  title="Cancel"
+                  variant="outline"
+                  onPress={() => setIsDeleteDialogOpen(false)}
+                />
+              </View>
+              <View style={{ minWidth: 100 }}>
+                <ThemedButton
+                  title="Delete Song"
+                  variant="destructive"
+                  onPress={handleDeleteSong}
+                />
               </View>
             </View>
           </View>
-        )}
-      </View>
-    </MainLayout>
+        </View>
+      )}
+    </View>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
-  header: {
-    marginBottom: 16,
-  },
-  titleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  backButton: {
-    marginRight: 16,
-  },
-  titleContainer: {
-    flex: 1,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-  },
-  subtitle: {
-    fontSize: 16,
-  },
-  actionButtons: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  actionButton: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 24,
-  },
-  songCard: {
-    borderRadius: 12,
-    overflow: "hidden",
-    marginBottom: 16,
-  },
-  songContent: {
-    padding: 16,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionName: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 12,
-  },
-  line: {
-    marginBottom: 12,
-  },
-  chordLine: {
-    fontFamily: "monospace",
-    fontSize: 20,
-    color: "#FFC857",
-  },
-  timedChords: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
-  },
-  timedChord: {
-    position: "relative",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  chordText: {
-    fontFamily: "monospace",
-    fontSize: 20,
-    color: "#FFC857",
-  },
-  timingBadge: {
-    position: "absolute",
-    top: -8,
-    right: -8,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: "#4285F4",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  timingText: {
-    color: "white",
-    fontSize: 12,
-    fontWeight: "bold",
-  },
-  playButton: {
-    marginTop: 8,
-  },
-  buttonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  modalOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 16,
-    zIndex: 100,
-  },
-  modalContent: {
-    width: "100%",
-    borderRadius: 12,
-    padding: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 8,
-  },
-  modalSubtitle: {
-    fontSize: 16,
-    marginBottom: 24,
-  },
-  modalButtons: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    gap: 12,
-  },
-  modalButton: {
-    minWidth: 100,
-  },
-})
 

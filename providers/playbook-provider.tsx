@@ -31,28 +31,25 @@ const mockPlaybooks: Playbook[] = [
                     root: "G",
                     quality: "maj",
                     interval: "none",
-                    timing: 4,
+                    timing: 2,
                   },
                   {
                     id: "2",
                     root: "D",
                     quality: "maj",
                     interval: "none",
-                    timing: 4,
                   },
                   {
                     id: "3",
                     root: "Em",
                     quality: "min",
                     interval: "none",
-                    timing: 4,
                   },
                   {
                     id: "4",
                     root: "C",
                     quality: "maj",
                     interval: "none",
-                    timing: 4,
                   },
                 ],
               },
@@ -70,28 +67,57 @@ const mockPlaybooks: Playbook[] = [
                     root: "G",
                     quality: "maj",
                     interval: "none",
-                    timing: 4,
                   },
                   {
                     id: "6",
                     root: "D",
                     quality: "maj",
                     interval: "none",
-                    timing: 4,
                   },
                   {
                     id: "7",
-                    root: "Em",
+                    root: "E",
                     quality: "min",
                     interval: "none",
-                    timing: 4,
+                    timing: 3,
                   },
                   {
                     id: "8",
                     root: "C",
                     quality: "maj",
                     interval: "none",
-                    timing: 4,
+                  },
+                ],
+              },
+              {
+                id: "2",
+                chords: [
+                  {
+                    id: "5",
+                    root: "G",
+                    quality: "maj",
+                    interval: "none",
+                    timing: 6,
+                  },
+                  {
+                    id: "6",
+                    root: "D",
+                    quality: "maj",
+                    interval: "none",
+                    timing: 6,
+                  },
+                  {
+                    id: "7",
+                    root: "E",
+                    quality: "min",
+                    interval: "none",
+                    timing: 3,
+                  },
+                  {
+                    id: "8",
+                    root: "C",
+                    quality: "maj",
+                    interval: "none",
                   },
                 ],
               },
@@ -377,6 +403,7 @@ export function PlaybookProvider({ children }: { children: React.ReactNode }) {
 
   const loadPlaybooks = async () => {
     try {
+      await AsyncStorage.setItem(STORAGE_KEY, "")
       const stored = await AsyncStorage.getItem(STORAGE_KEY)
       if (stored) {
         setPlaybooks(JSON.parse(stored))
