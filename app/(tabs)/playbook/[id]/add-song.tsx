@@ -140,14 +140,7 @@ export default function AddSongScreen() {
 
           <View className="mb-4">
             <Text className="text-base font-medium mb-2" style={{ color: colors.text }}>Original Key</Text>
-            <View
-              className="border rounded-lg h-[50px] justify-center"
-              style={{
-                borderColor: colors.border,
-                backgroundColor: colors.background,
-              }}
-            >
-              <Picker
+            <Picker
                 itemStyle={{ height: 50 }}
                 selectedValue={songKey}
                 onValueChange={(itemValue) => setSongKey(itemValue)}
@@ -158,7 +151,6 @@ export default function AddSongScreen() {
                   <Picker.Item key={key} label={key} value={key} />
                 ))}
               </Picker>
-            </View>
           </View>
         </View>
 
@@ -208,9 +200,9 @@ export default function AddSongScreen() {
                         className="flex-row justify-center items-center p-2 rounded-lg min-w-[45px] relative"
                         style={{ backgroundColor: colors.primaryLight }}
                       >
-                        <Text style={{ color: colors.primary }}>{formatChordDisplay(chord)}</Text>
+                        <Text className="text-xl" style={{ color: colors.primary }}>{formatChordDisplay(chord)}</Text>
                         {chord.timing && (
-                          <View className="ml-1 w-5 h-5 rounded-full bg-primary items-center justify-center absolute -top-2 -right-2">
+                          <View className="ml-1 w-6 h-6 rounded-full bg-primary items-center justify-center absolute -top-2 -right-2">
                             <Text className="text-sm text-white">{chord.timing}</Text>
                           </View>
                         )}
@@ -231,6 +223,7 @@ export default function AddSongScreen() {
         </View>
 
         <ThemedButton
+          size="lg"
           onPress={handleSaveSong}
           leftIcon={<Feather name="save" size={18} color="white" />}
           title="Save Song"

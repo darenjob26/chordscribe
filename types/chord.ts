@@ -4,6 +4,7 @@ export interface Chord {
   quality: string
   interval: string
   timing?: number
+  bass?: string  // For slash chords
 }
 
 export interface Line {

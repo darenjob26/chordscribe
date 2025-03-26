@@ -5,31 +5,8 @@ import { Feather } from "@expo/vector-icons"
 import { useTheme } from "@/components/theme-provider"
 import ThemedButton from "@/components/ui/TButton"
 import { Picker } from "@react-native-picker/picker"
-
-// Types
-interface Chord {
-  id: string
-  root: string
-  quality: string
-  interval: string
-  timing?: number
-}
-
-interface Line {
-  id: string
-  chords: Chord[]
-}
-
-interface Section {
-  id: string
-  name: string
-  lines: Line[]
-}
-
-// Constants
-const CHORD_ROOTS = ["C", "C#", "Db", "D", "D#", "Eb", "E", "F", "F#", "Gb", "G", "G#", "Ab", "A", "A#", "Bb", "B"]
-const CHORD_QUALITIES = ["maj", "min", "dim", "aug", "sus2", "sus4"]
-const CHORD_INTERVALS = ["none", "7", "maj7", "6", "9", "11", "13", "add9", "add11"]
+import { Chord, Line, Section } from "@/types/chord"
+import { CHORD_ROOTS, CHORD_QUALITIES, CHORD_INTERVALS, TIMING_OPTIONS } from "@/constants/chords"
 
 export default function NewSectionScreen() {
   const router = useRouter()
@@ -49,16 +26,20 @@ export default function NewSectionScreen() {
   const [selectedQuality, setSelectedQuality] = useState<string>("maj")
   const [selectedInterval, setSelectedInterval] = useState<string>("none")
   const [selectedTiming, setSelectedTiming] = useState<number>(4)
+  const [isSlashChord, setIsSlashChord] = useState(false)
+  const [selectedBass, setSelectedBass] = useState<string | undefined>(undefined)
 
   const handleAddChord = () => {
     if (!selectedRoot) return
+    if (isSlashChord && !selectedBass) return
 
     const newChord: Chord = {
       id: `chord-${Date.now()}`,
       root: selectedRoot,
       quality: selectedQuality,
       interval: selectedInterval,
-      ...(isTimedMode && { timing: selectedTiming })
+      ...(isTimedMode && { timing: selectedTiming }),
+      ...(isSlashChord && { bass: selectedBass })
     }
 
     setCurrentLine(prev => ({
@@ -66,9 +47,11 @@ export default function NewSectionScreen() {
       chords: [...prev.chords, newChord]
     }))
 
-    // Reset only root selection
+    // Reset selections
     setSelectedQuality("maj")
     setSelectedInterval("none")
+    setIsSlashChord(false)
+    setSelectedBass(undefined)
   }
 
   const handleDeleteChord = (chordId: string) => {
@@ -123,6 +106,7 @@ export default function NewSectionScreen() {
     let display = chord.root
     if (chord.quality !== "maj") display += chord.quality
     if (chord.interval !== "none") display += chord.interval
+    if (chord.bass) display += `/${chord.bass}`
     return display
   }
 
@@ -161,7 +145,7 @@ export default function NewSectionScreen() {
           <Text className="text-base font-medium mb-2" style={{ color: colors.text }}>Build Chord</Text>
 
           {/* Mode Toggle */}
-          <View className="flex-row items-center gap-2 ">
+          <View className="flex-row items-center gap-2 mb-4">
             <ThemedButton
               size="sm"
               onPress={() => setIsTimedMode(false)}
@@ -174,10 +158,19 @@ export default function NewSectionScreen() {
               title="Timed"
               variant={isTimedMode ? "default" : "outline"}
             />
+            {/* horizontal separator */}
+            <View className="h-[20px] w-[1px] bg-border mx-1 bg-gray-500"></View>
+
+            <ThemedButton
+              size="sm"
+              onPress={() => setIsSlashChord(!isSlashChord)}
+              title="Slash"
+              variant={isSlashChord ? "default" : "outline"}
+            />
           </View>
 
           {/* Picker Chord builder */}
-          <View className="flex-row ">
+          <View className="flex-row mb-4">
             <View className="flex-1">
               <Picker
                 selectedValue={selectedRoot}
@@ -188,7 +181,7 @@ export default function NewSectionScreen() {
                 ))}
               </Picker>
             </View>
-            <View className="flex-1 ">
+            <View className="flex-1">
               <Picker
                 selectionColor={"black"}
                 selectedValue={selectedQuality}
@@ -199,7 +192,7 @@ export default function NewSectionScreen() {
                 ))}
               </Picker>
             </View>
-            <View className="flex-1 ">
+            <View className="flex-1">
               <Picker
                 selectionColor={"black"}
                 selectedValue={selectedInterval}
@@ -211,6 +204,24 @@ export default function NewSectionScreen() {
               </Picker>
             </View>
           </View>
+
+          {/* Bass Note Selection (for slash chords) */}
+          {isSlashChord && (
+            <View className="mb-4">
+              <Text className="text-sm font-medium mb-2" style={{ color: colors.muted }}>Bass Note</Text>
+              <View className="flex-row flex-wrap gap-2">
+                {CHORD_ROOTS.map(root => (
+                  <TouchableOpacity
+                    key={root}
+                    className={`py-2 px-3 rounded-lg border ${selectedBass === root ? 'bg-primary border-primary' : 'border-border'}`}
+                    onPress={() => setSelectedBass(root)}
+                  >
+                    <Text style={{ color: selectedBass === root ? '#fff' : colors.text }}>{root}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
 
           {/* Timing (if in timed mode) */}
           {isTimedMode && (
@@ -235,7 +246,7 @@ export default function NewSectionScreen() {
               <ThemedButton
                 title="Add Chord"
                 onPress={handleAddChord}
-                disabled={!selectedRoot}
+                disabled={!selectedRoot || (isSlashChord && !selectedBass)}
               />
             </View>
             <View className="flex-1">
@@ -260,10 +271,10 @@ export default function NewSectionScreen() {
                 className="flex-row items-center p-2 rounded-lg"
                 style={{ backgroundColor: colors.primaryLight }}
               >
-                <Text style={{ color: colors.primary }}>{formatChordDisplay(chord)}</Text>
+                <Text className="text-xl" style={{ color: colors.primary }}>{formatChordDisplay(chord)}</Text>
                 {chord.timing && (
-                  <View className="ml-1 w-4 h-4 rounded-full bg-primary items-center justify-center">
-                    <Text className="text-xs text-white">{chord.timing}</Text>
+                  <View className="ml-1 w-6 h-6 rounded-full bg-primary items-center justify-center">
+                    <Text className="text-sm text-white">{chord.timing}</Text>
                   </View>
                 )}
                 <View className="ml-2">
