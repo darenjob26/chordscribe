@@ -1,7 +1,6 @@
-import { createContext, useContext, useState, useEffect } from "react"
-import AsyncStorage from "@react-native-async-storage/async-storage"
-import { Playbook, PlaybookContextType, CreatePlaybookInput, UpdatePlaybookInput } from "@/types/playbook"
-import { Song } from "@/types/chord"
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { Playbook, CreatePlaybookInput, UpdatePlaybookInput, Song } from '@/types/playbook'
 
 const STORAGE_KEY = "@playbooks"
 
@@ -398,15 +397,29 @@ const mockPlaybooks: Playbook[] = [
   },
 ]
 
+interface PlaybookContextType {
+  playbooks: Playbook[]
+  currentPlaybook: Playbook | null
+  isLoading: boolean
+  error: string | null
+  createPlaybook: (input: CreatePlaybookInput) => Promise<Playbook>
+  updatePlaybook: (id: string, input: UpdatePlaybookInput) => Promise<Playbook>
+  deletePlaybook: (id: string) => Promise<void>
+  getPlaybook: (id: string) => Promise<Playbook | null>
+  addSongToPlaybook: (playbookId: string, song: Song) => Promise<Playbook>
+  updateSongInPlaybook: (playbookId: string, songId: string, song: Song) => Promise<Playbook>
+  deleteSongFromPlaybook: (playbookId: string, songId: string) => Promise<Playbook>
+  setCurrentPlaybook: (playbook: Playbook | null) => void
+}
+
 const PlaybookContext = createContext<PlaybookContextType | undefined>(undefined)
 
-export function PlaybookProvider({ children }: { children: React.ReactNode }) {
+export function PlaybookProvider({ children }: { children: ReactNode }) {
   const [playbooks, setPlaybooks] = useState<Playbook[]>([])
   const [currentPlaybook, setCurrentPlaybook] = useState<Playbook | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Load playbooks from storage on mount
   useEffect(() => {
     loadPlaybooks()
   }, [])

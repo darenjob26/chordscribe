@@ -12,51 +12,32 @@ import { router as Router } from 'expo-router'
 import { Song, Section, Chord } from "@/types/chord"
 import { KEY_OPTIONS } from "@/constants/chords"
 import ChordProgressionPreview from "@/components/ChordProgressionPreview"
+import { useSong } from "@/contexts/SongProvider"
+import { usePlaybook } from "@/providers/playbook-provider"
 
 export default function AddSongScreen() {
   const router = useRouter()
-  const { id, newSection } = useLocalSearchParams<{ id: string; newSection?: string }>()
+  const { id } = useLocalSearchParams<{ id: string }>()
   const { colors } = useTheme()
   const insets = useSafeAreaInsets()
+  const { sections, deleteSection, clearSections } = useSong()
+  const { addSongToPlaybook } = usePlaybook()
 
   const [songTitle, setSongTitle] = useState("")
   const [songKey, setSongKey] = useState("C")
-  const [sections, setSections] = useState<Section[]>([])
 
   const headerHeight = insets.top + 30;
 
-  // Handle new section data from modal
-  useEffect(() => {
-    if (newSection) {
-      try {
-        const sectionData = JSON.parse(newSection)
-        // Check if this is an edit or new section
-        const existingSectionIndex = sections.findIndex(s => s.id === sectionData.id)
-        if (existingSectionIndex >= 0) {
-          // Update existing section
-          setSections(prev => prev.map((section, index) => 
-            index === existingSectionIndex ? sectionData : section
-          ))
-        } else {
-          // Add new section
-          setSections(prev => [...prev, sectionData])
-        }
-      } catch (error) {
-        console.error("Failed to parse section data:", error)
-      }
-    }
-  }, [newSection])
-
   const handleAddSection = () => {
     router.push({
-      pathname: '/(tabs)/playbook/[id]/new-section',
+      pathname: '/(tabs)/playbook/[id]/new-or-edit-section',
       params: { id }
     })
   }
 
   const handleEditSection = (section: Section) => {
     router.push({
-      pathname: '/(tabs)/playbook/[id]/new-section',
+      pathname: '/(tabs)/playbook/[id]/new-or-edit-section',
       params: {
         id,
         editSection: JSON.stringify(section)
@@ -65,10 +46,10 @@ export default function AddSongScreen() {
   }
 
   const handleDeleteSection = (sectionId: string) => {
-    setSections(sections.filter(section => section.id !== sectionId))
+    deleteSection(sectionId)
   }
 
-  const handleSaveSong = () => {
+  const handleSaveSong = async () => {
     if (!songTitle.trim()) {
       Alert.alert("Error", "Please enter a song title")
       return
@@ -79,11 +60,20 @@ export default function AddSongScreen() {
       return
     }
 
-    // In a real app, you would save the song to your backend
-    console.log("Saving song:", { songTitle, songKey, sections })
+    try {
+      const newSong = {
+        id: `song-${Date.now()}`,
+        title: songTitle,
+        key: songKey,
+        sections
+      }
 
-    // Navigate back to the playbook
-    router.back()
+      await addSongToPlaybook(id, newSong)
+      clearSections()
+      router.back()
+    } catch (error) {
+      Alert.alert("Error", "Failed to save song")
+    }
   }
 
   const formatChordDisplay = (chord: Chord): string => {

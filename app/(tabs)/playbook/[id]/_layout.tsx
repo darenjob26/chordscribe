@@ -1,14 +1,36 @@
 import { Stack } from "expo-router";
+import { SongProvider } from "@/contexts/SongProvider";
 
-export default function PlaybookSongsLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function PlaybookLayout() {
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="new-section" options={{ headerShown: false, presentation: 'modal' }} />
-    </Stack>
+    <SongProvider>
+      <Stack>
+        <Stack.Screen
+          name="index"
+          options={{
+            headerShown: false
+          }}
+        />
+        <Stack.Screen
+          name="add-song"
+          options={{
+            headerShown: false
+          }}
+        />
+        <Stack.Screen
+          name="new-or-edit-section"
+          options={{
+            headerShown: false,
+            presentation: 'modal'
+          }}
+        />
+        <Stack.Screen
+          name="song/[songId]"
+          options={{
+            headerShown: false
+          }}
+        />
+      </Stack>
+    </SongProvider>
   );
 }
