@@ -170,7 +170,7 @@ export default function AccountScreen() {
           <SettingsItem
             icon="mail"
             label="Email"
-            value={user?.email}
+            value={user?.email || "Not set"}
             onPress={() => router.push("/account/edit-profile")}
           />
           <SettingsItem

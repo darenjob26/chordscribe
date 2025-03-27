@@ -23,7 +23,7 @@ const darkTheme = {
   card: "#374151",
   text: "#f9fafb",
   border: "#4b5563",
-  primary: "#818cf8",
+  primary: "#3E6990",
   primaryLight: "#312e81",
   secondary: "#a78bfa",
   accent: "#34d399",

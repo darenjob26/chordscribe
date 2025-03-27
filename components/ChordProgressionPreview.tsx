@@ -35,8 +35,6 @@ export default function ChordProgressionPreview({
     return display
   }
 
-  console.log(JSON.stringify(sections, null, 2))
-
   return (
     <View className="rounded-xl overflow-hidden mb-4" style={{ backgroundColor: isDark ? "#1a1a2e" : "#1a1a2e" }}>
       <ScrollView className="p-4">
@@ -47,35 +45,38 @@ export default function ChordProgressionPreview({
             {section.lines.map((line) => (
               <View key={line.id} className="mb-3">
                 <View className="flex-row flex-wrap gap-3">
-                  {line.chords.map((chord, index) => (
-                    <View key={chord.id} className="flex-row items-center">
-                      <View className="relative px-1 py-2">
-                        <Text className="font-mono text-2xl" style={{ color: "#FFC857" }}>{formatChordDisplay(chord)}</Text>
-                        {chord.timing && chord.timing > 0 && (
-                          <View className="absolute -top-2 inset-0 items-center justify-start gap-1">
-                            {Array.from({ length: Math.ceil(chord.timing! / 4) || 1 })
-                              .reverse()
-                              .map((_, rowIndex) => (
-                                <View key={rowIndex} className="flex-row gap-2">
-                                  {Array.from({
-                                    length: rowIndex === 0
-                                      ?  Math.max(0, chord.timing! - 4)
-                                      :  Math.min(4, chord.timing!)
-                                  }).map((_, dotIndex) => (
-                                    <View key={dotIndex}
-                                      className="w-1.5 h-1.5 rounded-full bg-blue-500"
-                                    ></View>
-                                  ))}
-                                </View>
-                              ))}
-                          </View>
+                  {line.chords.map((chord, index) => {
+                    return (
+                      <View key={chord.id} className="flex-row items-center">
+                        <View className="relative px-1 py-2">
+                          <Text className="font-mono text-2xl" style={{ color: "#FFC857" }}>{formatChordDisplay(chord)}</Text>
+                          {chord.timing && chord.timing > 0 && (
+                            <View className="absolute -top-4 inset-0 items-center justify-start gap-1">
+                               <Text className="text-lg text-white">{chord.timing}"</Text>
+                              {/* {Array.from({ length: Math.ceil(chord.timing! / 4) || 1 })
+                                .reverse()
+                                .map((_, rowIndex) => (
+                                  <View key={rowIndex} className="flex-row gap-2">
+                                    {Array.from({
+                                      length: rowIndex === 0
+                                        ? Math.max(0, chord.timing! - 4)
+                                        : Math.min(4, chord.timing!)
+                                    }).map((_, dotIndex) => (
+                                      <View key={dotIndex}
+                                        className="w-1.5 h-1.5 rounded-full bg-blue-500"
+                                      />
+                                    ))}
+                                  </View>
+                                ))} */}
+                            </View>
+                          )}
+                        </View>
+                        {index < line.chords.length - 1 && (
+                          <Text className="font-mono text-2xl mx-4" style={{ color: "#FFC857" }}>|</Text>
                         )}
                       </View>
-                      {index < line.chords.length - 1 && (
-                        <Text className="font-mono text-2xl mx-4" style={{ color: "#FFC857" }}>|</Text>
-                      )}
-                    </View>
-                  ))}
+                    )
+                  })}
                 </View>
               </View>
             ))}

@@ -6,7 +6,7 @@ export default function PlaybookLayout({
   children: React.ReactNode;
 }) {
   return (
-    <Stack>
+    <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="[id]" options={{ headerShown: false, presentation: "card" }} />
     </Stack>

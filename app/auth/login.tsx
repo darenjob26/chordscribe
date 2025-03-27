@@ -74,7 +74,7 @@ export default function LoginScreen() {
           </View>
 
           <View className="space-y-4">
-            <View>
+            <View className="mb-4">
               <Text className="text-sm font-medium mb-2" style={{ color: colors.text }}>
                 Email
               </Text>
@@ -94,7 +94,7 @@ export default function LoginScreen() {
               />
             </View>
 
-            <View>
+            <View className="mb-4">
               <Text className="text-sm font-medium mb-2" style={{ color: colors.text }}>
                 Password
               </Text>

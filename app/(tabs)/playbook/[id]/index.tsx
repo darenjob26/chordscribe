@@ -24,7 +24,7 @@ export default function PlaybookSongsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const { playbooks, deleteSong } = usePlaybook();
+  const { playbooks, deleteSongFromPlaybook } = usePlaybook();
 
   const playbook = playbooks.find(p => p.id === id);
   const headerHeight = insets.top + 30;
@@ -48,7 +48,7 @@ export default function PlaybookSongsScreen() {
         {
           text: "Delete",
           style: "destructive",
-          onPress: () => deleteSong(id, songId)
+          onPress: () => deleteSongFromPlaybook(id, songId)
         }
       ]
     );
@@ -61,7 +61,7 @@ export default function PlaybookSongsScreen() {
       onPress={() => router.push(`/playbook/${id}/song/${item.id}` as any)}
     >
       <View
-        className="w-10 h-10 rounded-lg justify-center items-center mr-3 bg-primary"
+        className="w-10 h-10 rounded-lg justify-center items-center mr-3 bg-gray-500"
       >
         <Feather name="music" size={20} color="white" />
       </View>
@@ -96,33 +96,38 @@ export default function PlaybookSongsScreen() {
   }
 
   return (
-    <View className="flex-1 p-4" style={{ paddingTop: headerHeight }}>
+    <View className="flex-1 p-4" style={{ paddingTop: headerHeight, backgroundColor: colors.background }}>
       {/* Header */}
       <View className="flex-row justify-between items-center mb-8">
-        <Text className="text-2xl font-bold" style={{ color: colors.text }}>
-          {playbook.name}
-        </Text>
+        <View className="flex-row items-center gap-2">
+          <TouchableOpacity onPress={() => router.back()}>
+            <Feather name="arrow-left" size={24} color={colors.text} />
+          </TouchableOpacity>
+          <Text className="text-2xl font-bold" style={{ color: colors.text }}>
+            {playbook.name}
+          </Text>
+        </View>
         <ThemedButton
           title="Add Song"
           onPress={handleAddSong}
         />
       </View>
 
-      {/* Songs List */}
-      <FlatList
+      {playbook.songs.length === 0 ? (
+        <View className="items-center py-8 flex-1 justify-center">
+          <Text className="text-base text-muted mb-2">No songs added yet</Text>
+          <Text className="text-sm text-muted">Tap the Add Song button to create a new song</Text>
+        </View>
+      ) : (
+        <FlatList
         data={playbook.songs}
         renderItem={renderSongItem}
         keyExtractor={(item) => item.id}
         className="pb-4"
         showsVerticalScrollIndicator={false}
-      />
-
-      {playbook.songs.length === 0 && (
-        <View className="items-center justify-center py-8">
-          <Text className="text-base text-muted mb-2">No songs added yet</Text>
-          <Text className="text-sm text-muted">Tap the Add Song button to create a new song</Text>
-        </View>
+        />
       )}
+
     </View>
   );
 }

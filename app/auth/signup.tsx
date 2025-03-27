@@ -83,7 +83,7 @@ export default function SignUpScreen() {
           </View>
 
           <View className="space-y-4">
-            <View>
+            <View className="mb-4">
               <Text className="text-sm font-medium mb-2" style={{ color: colors.text }}>
                 Email
               </Text>
@@ -103,7 +103,7 @@ export default function SignUpScreen() {
               />
             </View>
 
-            <View>
+            <View className="mb-4">
               <Text className="text-sm font-medium mb-2" style={{ color: colors.text }}>
                 Password
               </Text>
@@ -122,7 +122,7 @@ export default function SignUpScreen() {
               />
             </View>
 
-            <View>
+            <View className="mb-4">
               <Text className="text-sm font-medium mb-2" style={{ color: colors.text }}>
                 Confirm Password
               </Text>

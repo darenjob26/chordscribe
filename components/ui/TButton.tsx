@@ -19,7 +19,7 @@ export default function ThemedButton({ title, leftIcon, rightIcon, variant = "de
         switch (variant) {
             case "default":
                 return {
-                    backgroundColor: "#000000",
+                    backgroundColor: colors.primary,
                 };
             case "outline":
                 return {

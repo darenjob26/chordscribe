@@ -84,7 +84,7 @@ export default function PlaybookScreen() {
   }
   
   return (
-    <View className="flex-1 p-4" style={{ paddingTop: headerHeight }}>
+    <View className="flex-1 p-4" style={{ paddingTop: headerHeight, backgroundColor: colors.background }}>
       {/* Header */}
       <View className="flex-row justify-between items-center mb-8">
         <Text className="text-2xl font-bold" style={{ color: colors.text }}>
