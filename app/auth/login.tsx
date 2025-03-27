@@ -1,58 +1,58 @@
 "use client";
 
+import { useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, Alert, Platform, KeyboardAvoidingView, ScrollView } from "react-native";
+import { useRouter } from "expo-router";
 import { useTheme } from "@/components/theme-provider";
-import { Button } from "@/components/ui/button";
-import ThemedInput from "@/components/ui/Input";
-import Input from "@/components/ui/Input";
 import ThemedButton from "@/components/ui/TButton";
 import { useAuth } from "@/providers/auth-provider";
 import { Feather } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import { useState } from "react";
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { signIn } = useAuth();
   const { colors } = useTheme();
-
+  const { signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert("Error", "Please enter both email and password");
+    if (!email.trim() || !password.trim()) {
+      Alert.alert("Error", "Please fill in all fields");
       return;
     }
 
     setIsLoading(true);
     try {
       await signIn(email, password);
-      router.replace("/");
-    } catch (error) {
-      Alert.alert("Error", "Invalid email or password. Please try again.");
+      router.replace("/(tabs)/playbook");
+    } catch (error: any) {
+      let errorMessage = "Failed to sign in. Please try again.";
+      
+      if (error.code === 'auth/invalid-email') {
+        errorMessage = "Invalid email address. Please check your email.";
+      } else if (error.code === 'auth/user-disabled') {
+        errorMessage = "This account has been disabled. Please contact support.";
+      } else if (error.code === 'auth/user-not-found') {
+        errorMessage = "No account found with this email. Please sign up first.";
+      } else if (error.code === 'auth/wrong-password') {
+        errorMessage = "Incorrect password. Please try again.";
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = "Too many failed attempts. Please try again later.";
+      }
+
+      Alert.alert(
+        "Sign In Failed",
+        errorMessage
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <SafeAreaView
-      className="flex-1"
-      style={{ backgroundColor: colors.background }}
-    >
+    <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
@@ -69,43 +69,55 @@ export default function LoginScreen() {
               Welcome to ChordScribe
             </Text>
             <Text className="text-base text-center" style={{ color: colors.muted }}>
-              Enter your credentials to access your account
+              Sign in to continue
             </Text>
           </View>
 
-          <View className="mb-6">
-            {/* Email Input */}
-            <ThemedInput
-              label="Email"
-              value={email}
-              onChangeText={setEmail}
-              placeholder="Enter your email"
-              leftIcon={<Feather name="mail" size={20} color={colors.muted} />}
-              autoCapitalize="none"
-              keyboardType="email-address"
+          <View className="space-y-4">
+            <View>
+              <Text className="text-sm font-medium mb-2" style={{ color: colors.text }}>
+                Email
+              </Text>
+              <TextInput
+                className="h-[50px] border rounded-lg px-4 text-base"
+                style={{
+                  borderColor: colors.border,
+                  backgroundColor: colors.background,
+                  color: colors.text,
+                }}
+                placeholder="Enter your email"
+                placeholderTextColor={colors.muted}
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+              />
+            </View>
+
+            <View>
+              <Text className="text-sm font-medium mb-2" style={{ color: colors.text }}>
+                Password
+              </Text>
+              <TextInput
+                className="h-[50px] border rounded-lg px-4 text-base"
+                style={{
+                  borderColor: colors.border,
+                  backgroundColor: colors.background,
+                  color: colors.text,
+                }}
+                placeholder="Enter your password"
+                placeholderTextColor={colors.muted}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+              />
+            </View>
+
+            <ThemedButton
+              title="Sign In"
+              onPress={handleLogin}
+              disabled={isLoading}
             />
-
-            {/* Password Input */}
-            <ThemedInput
-              label="Password"
-              value={password}
-              onChangeText={setPassword}
-              placeholder="Enter your password"
-              leftIcon={<Feather name="lock" size={20} color={colors.muted} />}
-              rightIcon={<TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                <Feather name={!showPassword ? "eye-off" : "eye"} size={20} color={colors.muted} />
-              </TouchableOpacity>}
-              secureTextEntry={!showPassword}
-            />
-
-            <TouchableOpacity
-              className="self-end mb-6"
-              onPress={() => router.push("/auth/forgot-password")}
-            >
-              <Text style={{ color: colors.secondary }}>Forgot password?</Text>
-            </TouchableOpacity>
-
-            <ThemedButton variant="default" title="Sign In" onPress={handleLogin} disabled={isLoading} />
 
             <View className="flex-row items-center my-6">
               <View className="flex-1 h-[1px]" style={{ backgroundColor: colors.border }} />
@@ -116,29 +128,26 @@ export default function LoginScreen() {
             <ThemedButton
               variant="outline"
               title="Sign in with Google"
-              onPress={() => { }}
-              disabled={isLoading}
-              leftIcon={<GoogleIcon />}
+              onPress={() => {}}
+              disabled={true}
+              leftIcon={<View className="w-6 h-6 rounded-full bg-gray-100 justify-center items-center mr-2">
+                <Text className="text-base font-bold">G</Text>
+              </View>}
             />
 
-          </View>
-
-          <View className="flex-row justify-center">
-            <Text style={{ color: colors.muted }}>Don't have an account? </Text>
-            <TouchableOpacity onPress={() => router.push("/auth/signup")}>
-              <Text style={{ color: colors.secondary }}>Sign up</Text>
-            </TouchableOpacity>
+            <View className="flex-row justify-center mt-4">
+              <Text className="text-sm" style={{ color: colors.muted }}>
+                Don't have an account?{" "}
+              </Text>
+              <TouchableOpacity onPress={() => router.push("/auth/signup")}>
+                <Text className="text-sm font-medium" style={{ color: colors.primary }}>
+                  Sign Up
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
-  );
-}
-
-function GoogleIcon() {
-  return (
-    <View className="w-6 h-6 rounded-full bg-gray-100 justify-center items-center mr-2">
-      <Text className="text-base font-bold">G</Text>
-    </View>
   );
 }

@@ -1,39 +1,25 @@
 "use client";
 
+import { useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, Alert, Platform, KeyboardAvoidingView, ScrollView } from "react-native";
+import { useRouter } from "expo-router";
 import { useTheme } from "@/components/theme-provider";
-import { Button } from "@/components/ui/button";
-import ThemedInput from "@/components/ui/Input";
 import ThemedButton from "@/components/ui/TButton";
 import { useAuth } from "@/providers/auth-provider";
 import { Feather } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import { useState } from "react";
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function SignupScreen() {
+export default function SignUpScreen() {
   const router = useRouter();
-  const { signUp } = useAuth();
   const { colors } = useTheme();
-
-  const [name, setName] = useState("");
+  const { signUp } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
 
-  const handleSignup = async () => {
-    if (!name || !email || !password || !confirmPassword) {
+  const handleSignUp = async () => {
+    if (!email.trim() || !password.trim() || !confirmPassword.trim()) {
       Alert.alert("Error", "Please fill in all fields");
       return;
     }
@@ -43,26 +29,39 @@ export default function SignupScreen() {
       return;
     }
 
+    if (password.length < 6) {
+      Alert.alert("Error", "Password must be at least 6 characters long");
+      return;
+    }
+
     setIsLoading(true);
     try {
-      await signUp(name, email, password);
-      // Navigate to OTP verification
-      router.push({
-        pathname: "/auth/verify",
-        params: { email },
-      });
-    } catch (error) {
-      Alert.alert("Error", "Failed to create account. Please try again.");
+      await signUp(email, password);
+      router.replace("/(tabs)/playbook");
+    } catch (error: any) {
+      let errorMessage = "Failed to create account. Please try again.";
+      
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = "An account with this email already exists. Please sign in instead.";
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = "Invalid email address. Please check your email.";
+      } else if (error.code === 'auth/operation-not-allowed') {
+        errorMessage = "Email/password accounts are not enabled. Please contact support.";
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = "Password is too weak. Please choose a stronger password.";
+      }
+
+      Alert.alert(
+        "Sign Up Failed",
+        errorMessage
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <SafeAreaView
-      className="flex-1"
-      style={{ backgroundColor: colors.background }}
-    >
+    <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
@@ -76,58 +75,75 @@ export default function SignupScreen() {
               <Feather name="music" size={32} color={colors.primary} />
             </View>
             <Text className="text-2xl font-bold mb-2 text-center" style={{ color: colors.text }}>
-              Create an account
+              Create ChordScribe Account
             </Text>
             <Text className="text-base text-center" style={{ color: colors.muted }}>
-              Enter your information to get started with ChordScribe
+              Sign up to get started
             </Text>
           </View>
 
-          <View className="mb-6">
-            {/* Name Input */}
-            <ThemedInput
-              label="Full Name"
-              value={name}
-              onChangeText={setName}
-              placeholder="Enter your full name"
-              leftIcon={<Feather name="user" size={20} color={colors.muted} />}
-            />
+          <View className="space-y-4">
+            <View>
+              <Text className="text-sm font-medium mb-2" style={{ color: colors.text }}>
+                Email
+              </Text>
+              <TextInput
+                className="h-[50px] border rounded-lg px-4 text-base"
+                style={{
+                  borderColor: colors.border,
+                  backgroundColor: colors.background,
+                  color: colors.text,
+                }}
+                placeholder="Enter your email"
+                placeholderTextColor={colors.muted}
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+              />
+            </View>
 
-            {/* Email Input */}
-            <ThemedInput
-              label="Email"
-              value={email}
-              onChangeText={setEmail}
-              placeholder="Enter your email"
-              leftIcon={<Feather name="mail" size={20} color={colors.muted} />}
-            />
+            <View>
+              <Text className="text-sm font-medium mb-2" style={{ color: colors.text }}>
+                Password
+              </Text>
+              <TextInput
+                className="h-[50px] border rounded-lg px-4 text-base"
+                style={{
+                  borderColor: colors.border,
+                  backgroundColor: colors.background,
+                  color: colors.text,
+                }}
+                placeholder="Enter your password"
+                placeholderTextColor={colors.muted}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+              />
+            </View>
 
-            {/* Password Input */}
-            <ThemedInput
-              label="Password"
-              value={password}
-              onChangeText={setPassword}
-              placeholder="Create a password"
-              leftIcon={<Feather name="lock" size={20} color={colors.muted} />}
-              rightIcon={<TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                <Feather name={!showPassword ? "eye-off" : "eye"} size={20} color={colors.muted} />
-              </TouchableOpacity>}
-              secureTextEntry={!showPassword}
-            />
-
-            {/* Confirm Password Input */}
-            <ThemedInput
-              label="Confirm Password"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              placeholder="Confirm your password"
-              leftIcon={<Feather name="lock" size={20} color={colors.muted} />}
-              secureTextEntry={true}
-            />
+            <View>
+              <Text className="text-sm font-medium mb-2" style={{ color: colors.text }}>
+                Confirm Password
+              </Text>
+              <TextInput
+                className="h-[50px] border rounded-lg px-4 text-base"
+                style={{
+                  borderColor: colors.border,
+                  backgroundColor: colors.background,
+                  color: colors.text,
+                }}
+                placeholder="Confirm your password"
+                placeholderTextColor={colors.muted}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry
+              />
+            </View>
 
             <ThemedButton
-              title="Create Account"
-              onPress={handleSignup}
+              title="Sign Up"
+              onPress={handleSignUp}
               disabled={isLoading}
             />
 
@@ -140,28 +156,26 @@ export default function SignupScreen() {
             <ThemedButton
               variant="outline"
               title="Sign up with Google"
-              onPress={() => { }}
-              disabled={isLoading}
-              leftIcon={<GoogleIcon />}
+              onPress={() => {}}
+              disabled={true}
+              leftIcon={<View className="w-6 h-6 rounded-full bg-gray-100 justify-center items-center mr-2">
+                <Text className="text-base font-bold">G</Text>
+              </View>}
             />
-          </View>
 
-          <View className="flex-row justify-center">
-            <Text style={{ color: colors.muted }}>Already have an account? </Text>
-            <TouchableOpacity onPress={() => router.push("/auth/login")}>
-              <Text style={{ color: colors.primary }}>Sign in</Text>
-            </TouchableOpacity>
+            <View className="flex-row justify-center mt-4">
+              <Text className="text-sm" style={{ color: colors.muted }}>
+                Already have an account?{" "}
+              </Text>
+              <TouchableOpacity onPress={() => router.push("/auth/login")}>
+                <Text className="text-sm font-medium" style={{ color: colors.primary }}>
+                  Sign In
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
-  );
-}
-
-function GoogleIcon() {
-  return (
-    <View className="w-6 h-6 rounded-full bg-gray-100 justify-center items-center mr-2">
-      <Text className="text-base font-bold">G</Text>
-    </View>
   );
 }
