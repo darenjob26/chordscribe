@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Alert } from "react-native"
 import { useRouter, useLocalSearchParams } from "expo-router"
 import { Feather } from "@expo/vector-icons"
-import { MainLayout } from "@/components/layouts/main-layout"
 import { Button } from "@/components/ui/button"
 import { useTheme } from "@/components/theme-provider"
 
@@ -119,17 +118,14 @@ export default function SessionDetailScreen() {
 
   if (!session) {
     return (
-      <MainLayout>
-        <View style={styles.container}>
-          <Text>Session not found</Text>
-        </View>
-      </MainLayout>
+      <View className="flex-1 justify-center items-center">
+        <Text>Session not found</Text>
+      </View>
     )
   }
 
   return (
-    <MainLayout>
-      <View style={styles.container}>
+    <View style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <Feather name="arrow-left" size={24} color={colors.text} />
@@ -270,7 +266,6 @@ export default function SessionDetailScreen() {
           </View>
         )}
       </View>
-    </MainLayout>
   )
 }
 

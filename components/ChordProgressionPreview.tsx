@@ -28,7 +28,7 @@ export default function ChordProgressionPreview({
       display += chord.interval
     }
 
-    if(chord.bass){
+    if (chord.bass) {
       display += '/' + chord.bass
     }
 
@@ -52,23 +52,25 @@ export default function ChordProgressionPreview({
                         {chord.timing && chord.timing > 0 && (
                           <View className="absolute -top-2 inset-0 items-center justify-start gap-1">
                             {Array.from({ length: Math.ceil(chord.timing! / 4) || 1 })
-                            .reverse()
-                            .map((_, rowIndex) => (
-                              <View key={rowIndex} className="flex-row gap-1">
-                                {Array.from({ 
-                                  length: rowIndex === 0 
-                                    ? Math.min(4, chord.timing!)
-                                    : Math.max(0, chord.timing! - 4)
-                                }).map((_, dotIndex) => (
-                                  <View key={dotIndex} className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                                ))}
-                              </View>
-                            ))}
+                              .reverse()
+                              .map((_, rowIndex) => (
+                                <View key={rowIndex} className="flex-row gap-2">
+                                  {Array.from({
+                                    length: rowIndex === 0
+                                      ?  Math.max(0, chord.timing! - 4)
+                                      :  Math.min(4, chord.timing!)
+                                  }).map((_, dotIndex) => (
+                                    <View key={dotIndex}
+                                      className="w-1.5 h-1.5 rounded-full bg-blue-500"
+                                    ></View>
+                                  ))}
+                                </View>
+                              ))}
                           </View>
                         )}
                       </View>
                       {index < line.chords.length - 1 && (
-                        <Text className="font-mono text-2xl mx-2" style={{ color: "#FFC857" }}>|</Text>
+                        <Text className="font-mono text-2xl mx-4" style={{ color: "#FFC857" }}>|</Text>
                       )}
                     </View>
                   ))}

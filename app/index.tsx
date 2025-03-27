@@ -1,9 +1,6 @@
 "use client";
 
-import { MainLayout } from "@/components/layouts/main-layout";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/providers/auth-provider";
-import { styles } from "@/styles/styles";
 import { Redirect, useRouter } from "expo-router";
 import { useEffect } from "react";
 import { Text, View } from "react-native";
@@ -20,7 +17,7 @@ export default function Home() {
 
   if (isLoading || !user) {
     return (
-      <View style={styles.container}>
+      <View className="flex-1 justify-center items-center">
         <Text>Loading...</Text>
       </View>
     );

@@ -28,7 +28,7 @@ export default function NewOrEditSectionScreen() {
   const [selectedRoot, setSelectedRoot] = useState<string | null>("C")
   const [selectedQuality, setSelectedQuality] = useState<string>("maj")
   const [selectedInterval, setSelectedInterval] = useState<string>("none")
-  const [selectedTiming, setSelectedTiming] = useState<number>(4)
+  const [selectedTiming, setSelectedTiming] = useState<number>(2)
   const [isSlashChord, setIsSlashChord] = useState(false)
   const [selectedBass, setSelectedBass] = useState<string | undefined>(undefined)
 

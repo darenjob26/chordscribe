@@ -4,7 +4,6 @@ import { useState } from "react"
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Alert } from "react-native"
 import { useRouter } from "expo-router"
 import { Feather } from "@expo/vector-icons"
-import { MainLayout } from "@/components/layouts/main-layout"
 import { Button } from "@/components/ui/button"
 import { useTheme } from "@/components/theme-provider"
 
@@ -84,76 +83,74 @@ export default function SessionScreen() {
   )
 
   return (
-    <MainLayout>
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.text }]}>Practice Sessions</Text>
-          <Button
-            onPress={() => setIsAddDialogOpen(true)}
-            leftIcon={<Feather name="plus-circle" size={18} color="white" />}
-          >
-            <Text style={styles.buttonText}>New Session</Text>
-          </Button>
-        </View>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: colors.text }]}>Practice Sessions</Text>
+        <Button
+          onPress={() => setIsAddDialogOpen(true)}
+          leftIcon={<Feather name="plus-circle" size={18} color="white" />}
+        >
+          <Text style={styles.buttonText}>New Session</Text>
+        </Button>
+      </View>
 
-        <Text style={[styles.subtitle, { color: colors.muted }]}>
-          Create and manage your practice or recording sessions
-        </Text>
+      <Text style={[styles.subtitle, { color: colors.muted }]}>
+        Create and manage your practice or recording sessions
+      </Text>
 
-        <FlatList
-          data={sessions}
-          renderItem={renderSessionItem}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-        />
+      <FlatList
+        data={sessions}
+        renderItem={renderSessionItem}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+      />
 
-        {/* Add Session Dialog */}
-        {isAddDialogOpen && (
-          <View style={styles.modalOverlay}>
-            <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
-              <Text style={[styles.modalTitle, { color: colors.text }]}>Create New Session</Text>
-              <Text style={[styles.modalSubtitle, { color: colors.muted }]}>
-                Enter a name for your new practice session.
-              </Text>
+      {/* Add Session Dialog */}
+      {isAddDialogOpen && (
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>Create New Session</Text>
+            <Text style={[styles.modalSubtitle, { color: colors.muted }]}>
+              Enter a name for your new practice session.
+            </Text>
 
-              <Text style={[styles.inputLabel, { color: colors.text }]}>Session Name</Text>
-              <TextInput
-                style={[
-                  styles.input,
-                  {
-                    borderColor: colors.border,
-                    backgroundColor: colors.card,
-                    color: colors.text,
-                  },
-                ]}
-                placeholder="My Practice Session"
-                placeholderTextColor={colors.muted}
-                value={newSessionName}
-                onChangeText={setNewSessionName}
-                autoFocus
-              />
+            <Text style={[styles.inputLabel, { color: colors.text }]}>Session Name</Text>
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  borderColor: colors.border,
+                  backgroundColor: colors.card,
+                  color: colors.text,
+                },
+              ]}
+              placeholder="My Practice Session"
+              placeholderTextColor={colors.muted}
+              value={newSessionName}
+              onChangeText={setNewSessionName}
+              autoFocus
+            />
 
-              <View style={styles.modalButtons}>
-                <Button
-                  variant="outline"
-                  onPress={() => {
-                    setIsAddDialogOpen(false)
-                    setNewSessionName("")
-                  }}
-                  style={styles.modalButton}
-                >
-                  <Text style={{ color: colors.text }}>Cancel</Text>
-                </Button>
-                <Button onPress={handleAddSession} style={styles.modalButton}>
-                  <Text style={styles.buttonText}>Create</Text>
-                </Button>
-              </View>
+            <View style={styles.modalButtons}>
+              <Button
+                variant="outline"
+                onPress={() => {
+                  setIsAddDialogOpen(false)
+                  setNewSessionName("")
+                }}
+                style={styles.modalButton}
+              >
+                <Text style={{ color: colors.text }}>Cancel</Text>
+              </Button>
+              <Button onPress={handleAddSession} style={styles.modalButton}>
+                <Text style={styles.buttonText}>Create</Text>
+              </Button>
             </View>
           </View>
-        )}
-      </View>
-    </MainLayout>
+        </View>
+      )}
+    </View>
   )
 }
 
