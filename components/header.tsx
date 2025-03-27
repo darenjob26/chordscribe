@@ -2,7 +2,7 @@
 import { View, Text, TouchableOpacity } from "react-native"
 import { Feather } from "@expo/vector-icons"
 import { useRouter, usePathname } from "expo-router"
-import { useTheme } from "@/components/theme-provider"
+import { useTheme } from "@/providers/theme-provider"
 
 interface HeaderProps {
   onMenuPress: () => void

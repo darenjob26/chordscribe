@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import React from 'react';
 import { TextInput, View, Text, StyleSheet, TextInputProps } from 'react-native';
-import { useTheme } from '../theme-provider';
+import { useTheme } from '../../providers/theme-provider';
 
 interface InputProps extends TextInputProps {
   label?: string;

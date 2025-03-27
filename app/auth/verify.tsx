@@ -1,6 +1,6 @@
 "use client";
 
-import { useTheme } from "@/components/theme-provider";
+import { useTheme } from "@/providers/theme-provider";
 import { Button } from "@/components/ui/button";
 import ThemedButton from "@/components/ui/TButton";
 import { useAuth } from "@/providers/auth-provider";

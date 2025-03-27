@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/providers/auth-provider";
-import { useTheme } from "@/components/theme-provider";
+import { useTheme } from "@/providers/theme-provider";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import {

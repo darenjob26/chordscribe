@@ -5,7 +5,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Alert } 
 import { useRouter } from "expo-router"
 import { Feather } from "@expo/vector-icons"
 import { Button } from "@/components/ui/button"
-import { useTheme } from "@/components/theme-provider"
+import { useTheme } from "@/providers/theme-provider"
 
 // Mock data for sessions
 interface Session {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useTheme } from "@/components/theme-provider";
+import { useTheme } from "@/providers/theme-provider";
 import ThemedButton from "@/components/ui/TButton";
 import ThemedInput from "@/components/ui/Input";
 import { Feather } from "@expo/vector-icons";

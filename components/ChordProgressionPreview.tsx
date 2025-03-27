@@ -1,5 +1,5 @@
 import { View, Text, ScrollView } from "react-native"
-import { useTheme } from "@/components/theme-provider"
+import { useTheme } from "@/providers/theme-provider"
 import { Chord, Section } from "@/types/chord"
 
 interface ChordProgressionPreviewProps {
@@ -34,6 +34,8 @@ export default function ChordProgressionPreview({
 
     return display
   }
+
+  console.log(JSON.stringify(sections, null, 2))
 
   return (
     <View className="rounded-xl overflow-hidden mb-4" style={{ backgroundColor: isDark ? "#1a1a2e" : "#1a1a2e" }}>

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert, Platform, KeyboardAvoidingView, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
-import { useTheme } from "@/components/theme-provider";
+import { useTheme } from "@/providers/theme-provider";
 import ThemedButton from "@/components/ui/TButton";
 import { useAuth } from "@/providers/auth-provider";
 import { Feather } from "@expo/vector-icons";

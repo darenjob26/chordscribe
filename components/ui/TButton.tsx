@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import React from 'react';
 import { TextInput, View, Text, ButtonProps, TouchableOpacity, StyleSheet } from 'react-native';
-import { useTheme } from '../theme-provider';
+import { useTheme } from '../../providers/theme-provider';
 import { cn } from '@/lib/utils';
 
 interface ThemedButtonProps extends ButtonProps {
