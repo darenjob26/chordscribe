@@ -8,6 +8,7 @@ import { useTheme } from "@/components/theme-provider"
 import ThemedButton from "@/components/ui/TButton"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { usePlaybook } from "@/providers/playbook-provider"
+import ChordProgressionPreview from "@/components/ChordProgressionPreview"
 
 // Types
 interface Chord {
@@ -40,7 +41,7 @@ interface Song {
 export default function SongDetailScreen() {
   const router = useRouter()
   const { id, songId } = useLocalSearchParams<{ id: string; songId: string }>()
-  const { colors, isDark } = useTheme()
+  const { colors } = useTheme()
   const insets = useSafeAreaInsets()
   const { getPlaybook } = usePlaybook()
 
@@ -72,21 +73,6 @@ export default function SongDetailScreen() {
     // In a real app, you would delete the song via an API
     setIsDeleteDialogOpen(false)
     router.back()
-  }
-
-  // Update the formatChordDisplay function to handle timing display
-  const formatChordDisplay = (chord: Chord): string => {
-    let display = chord.root
-
-    if (chord.quality && chord.quality !== "maj") {
-      display += chord.quality
-    }
-
-    if (chord.interval && chord.interval !== "none") {
-      display += chord.interval
-    }
-
-    return display
   }
 
   if (!song) {
@@ -136,56 +122,12 @@ export default function SongDetailScreen() {
         </View>
       </View>
 
-      {/* Chord Progression Preview */}
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 24 }}
         showsVerticalScrollIndicator={false}
       >
-        <View className="rounded-xl overflow-hidden mb-4" style={{ backgroundColor: isDark ? "#1a1a2e" : "#1a1a2e" }}>
-          <ScrollView className="p-4">
-            {song.sections.map((section) => (
-              <View key={section.id} className="mb-6">
-                <Text className="text-xl font-bold mb-3" style={{ color: "#78E3FD" }}>{section.name}</Text>
-
-                {section.lines.map((line) => (
-                  <View key={line.id} className="mb-3">
-                    {line.chords.some((chord) => chord.timing) ? (
-                      <View className="flex-row flex-wrap gap-3">
-                        {line.chords.map((chord, index) => (
-                          <View key={chord.id} className="flex-row items-center">
-                            <View className="relative px-1 py-2">
-                              <Text className="font-mono text-2xl" style={{ color: "#FFC857" }}>{formatChordDisplay(chord)}</Text>
-                              {chord.timing && (
-                                <View className="absolute inset-0 flex-col-reverse items-center justify-end -top-2 gap-1">
-                                  {Array.from({ length: Math.ceil((chord.timing || 0) / 4) }).map((_, rowIndex) => (
-                                    <View key={rowIndex} className="flex-row gap-1">
-                                      {Array.from({ length: Math.min(4, (chord.timing || 0) - rowIndex * 4) }).map((_, dotIndex) => (
-                                        <View key={dotIndex} className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                                      ))}
-                                    </View>
-                                  ))}
-                                </View>
-
-                              )}
-                            </View>
-                            {index < line.chords.length - 1 && (
-                              <Text className="font-mono text-2xl mx-2" style={{ color: "#FFC857" }}>|</Text>
-                            )}
-                          </View>
-                        ))}
-                      </View>
-                    ) : (
-                      <Text className="font-mono text-2xl" style={{ color: "#FFC857" }}>
-                        {line.chords.map((chord) => formatChordDisplay(chord)).join(" | ")}
-                      </Text>
-                    )}
-                  </View>
-                ))}
-              </View>
-            ))}
-          </ScrollView>
-        </View>
+        <ChordProgressionPreview sections={song.sections} />
       </ScrollView>
 
       {/* Delete Confirmation Dialog */}

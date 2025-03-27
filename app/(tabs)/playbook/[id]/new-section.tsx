@@ -273,12 +273,12 @@ export default function NewSectionScreen() {
               >
                 <Text className="text-xl" style={{ color: colors.primary }}>{formatChordDisplay(chord)}</Text>
                 {chord.timing && (
-                  <View className="ml-1 w-6 h-6 rounded-full bg-primary items-center justify-center">
-                    <Text className="text-sm text-white">{chord.timing}</Text>
+                  <View className="ml-1 w-5 h-5 rounded-full bg-primary items-center justify-center">
+                    <Text className="text-xs text-white">{chord.timing}</Text>
                   </View>
                 )}
-                <View className="ml-2">
-                  <Feather name="x" size={16} color={colors.primary} />
+                <View className="ml-1">
+                  <Feather name="x" size={16} color={colors.error} />
                 </View>
               </TouchableOpacity>
             ))}
@@ -302,12 +302,12 @@ export default function NewSectionScreen() {
                     {line.chords.map(chord => (
                       <View
                         key={chord.id}
-                        className="flex-row items-center p-2 rounded-lg relative"
+                        className="flex-row items-center p-2 rounded-lg"
                         style={{ backgroundColor: colors.primaryLight }}
                       >
-                        <Text style={{ color: colors.primary }}>{formatChordDisplay(chord)}</Text>
+                        <Text className="text-xl">{formatChordDisplay(chord)}</Text>
                         {chord.timing && (
-                          <View className="ml-1 w-4 h-4 rounded-full bg-primary items-center justify-center absolute -top-2 -right-2">
+                          <View className="ml-1 w-5 h-5 rounded-full bg-primary items-center justify-center">
                             <Text className="text-xs text-white">{chord.timing}</Text>
                           </View>
                         )}

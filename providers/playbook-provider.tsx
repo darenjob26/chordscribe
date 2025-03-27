@@ -30,7 +30,8 @@ const mockPlaybooks: Playbook[] = [
                     id: "1",
                     root: "G",
                     quality: "maj",
-                    interval: "none"
+                    interval: "none",
+                    timing: 2
                   },
                   {
                     id: "2",
@@ -72,6 +73,7 @@ const mockPlaybooks: Playbook[] = [
                     root: "D",
                     quality: "maj",
                     interval: "none",
+                    timing: 6
                   },
                   {
                     id: "7",
@@ -150,7 +152,7 @@ const mockPlaybooks: Playbook[] = [
                     root: "C",
                     quality: "maj",
                     interval: "none",
-                    timing: 4,
+                    timing: 6,
                   },
                   {
                     id: "2",

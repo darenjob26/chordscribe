@@ -11,6 +11,7 @@ import ThemedButton from "@/components/ui/TButton"
 import { router as Router } from 'expo-router'
 import { Song, Section, Chord } from "@/types/chord"
 import { KEY_OPTIONS } from "@/constants/chords"
+import ChordProgressionPreview from "@/components/ChordProgressionPreview"
 
 export default function AddSongScreen() {
   const router = useRouter()
@@ -28,10 +29,33 @@ export default function AddSongScreen() {
         {
           id: "line-1",
           chords: [
-            { id: "chord-1", root: "C", quality: "maj", interval: "none", timing: 4 },
+            { id: "chord-1", root: "C", bass: "E", quality: "maj", interval: "none", timing: 4 },
+            { id: "chord-2", root: "G", quality: "maj", interval: "none", timing: 6 },
+            { id: "chord-3", root: "A", quality: "m", interval: "none" },
+            { id: "chord-4", root: "F", quality: "maj", interval: "none", timing: 5 },
+          ]
+        },
+        {
+          id: "line-2",
+          chords: [
+            { id: "chord-5", root: "C", quality: "maj", interval: "7" },
+            { id: "chord-6", root: "G", quality: "maj", interval: "7" },
+            { id: "chord-7", root: "F", quality: "maj", interval: "maj7" },
+          ]
+        }
+      ]
+    },
+    {
+      id: "mock-verse",
+      name: "Verse",
+      lines: [
+        {
+          id: "line-1",
+          chords: [
+            { id: "chord-1", root: "C", bass: "E", quality: "maj", interval: "none", timing: 4 },
             { id: "chord-2", root: "G", quality: "maj", interval: "none" },
             { id: "chord-3", root: "A", quality: "m", interval: "none" },
-            { id: "chord-4", root: "F", quality: "maj", interval: "none" },
+            { id: "chord-4", root: "F", quality: "maj", interval: "none", timing: 6 },
           ]
         },
         {
@@ -139,16 +163,16 @@ export default function AddSongScreen() {
           <View className="mb-4">
             <Text className="text-base font-medium mb-2" style={{ color: colors.text }}>Original Key</Text>
             <Picker
-                itemStyle={{ height: 50 }}
-                selectedValue={songKey}
-                onValueChange={(itemValue) => setSongKey(itemValue)}
-                style={{ color: colors.text, backgroundColor: colors.background }}
-                dropdownIconColor={colors.text}
-              >
-                {KEY_OPTIONS.map((key) => (
-                  <Picker.Item key={key} label={key} value={key} />
-                ))}
-              </Picker>
+              itemStyle={{ height: 50 }}
+              selectedValue={songKey}
+              onValueChange={(itemValue) => setSongKey(itemValue)}
+              style={{ color: colors.text, backgroundColor: colors.background }}
+              dropdownIconColor={colors.text}
+            >
+              {KEY_OPTIONS.map((key) => (
+                <Picker.Item key={key} label={key} value={key} />
+              ))}
+            </Picker>
           </View>
         </View>
 
@@ -163,54 +187,34 @@ export default function AddSongScreen() {
             />
           </View>
 
-          {sections.map((section) => (
-            <View
-              key={section.id}
-              className="rounded-lg border mb-3 p-4"
-              style={{ backgroundColor: colors.card, borderColor: colors.border }}
-            >
-              <View className="flex-row justify-between items-center mb-3">
-                <Text className="text-lg font-semibold" style={{ color: colors.text }}>
-                  {section.name}
-                </Text>
-                <View className="flex-row gap-2">
-                  <TouchableOpacity
-                    className="p-2"
-                    onPress={() => handleEditSection(section)}
-                  >
-                    <Feather name="edit-2" size={20} color={colors.text} />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    className="p-2"
-                    onPress={() => handleDeleteSection(section.id)}
-                  >
-                    <Feather name="trash-2" size={20} color={colors.error} />
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              {section.lines.map((line, lineIndex) => (
-                <View key={line.id} className="mb-2">
-                  <View className="flex-row flex-wrap gap-3">
-                    {line.chords.map(chord => (
-                      <View
-                        key={chord.id}
-                        className="flex-row justify-center items-center p-2 rounded-lg min-w-[45px] relative"
-                        style={{ backgroundColor: colors.primaryLight }}
-                      >
-                        <Text className="text-xl" style={{ color: colors.primary }}>{formatChordDisplay(chord)}</Text>
-                        {chord.timing && (
-                          <View className="ml-1 w-6 h-6 rounded-full bg-primary items-center justify-center absolute -top-2 -right-2">
-                            <Text className="text-sm text-white">{chord.timing}</Text>
-                          </View>
-                        )}
-                      </View>
-                    ))}
+          <View
+            className="rounded-lg border mb-3 p-4"
+            style={{ backgroundColor: colors.card, borderColor: colors.border }}
+          >
+            {sections.map((section) => (
+              <View key={section.id} >
+                {/* Section Action Buttons */}
+                <View className="flex-row justify-end mr-4 items-center relative">
+                  <View className="flex-row gap-3 absolute top-4 z-10">
+                    <TouchableOpacity
+                      className="p-2 bg-white rounded"
+                      onPress={() => handleEditSection(section)}
+                    >
+                      <Feather name="edit-2" size={20} color={colors.text} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      className="p-2 bg-white rounded"
+                      onPress={() => handleDeleteSection(section.id)}
+                    >
+                      <Feather name="trash-2" size={20} color={colors.error} />
+                    </TouchableOpacity>
                   </View>
                 </View>
-              ))}
-            </View>
-          ))}
+
+                <ChordProgressionPreview sections={[section]} />
+              </View>
+            ))}
+          </View>
 
           {sections.length === 0 && (
             <View className="items-center justify-center py-8">
