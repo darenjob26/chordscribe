@@ -21,62 +21,29 @@ export default function AddSongScreen() {
 
   const [songTitle, setSongTitle] = useState("")
   const [songKey, setSongKey] = useState("C")
-  const [sections, setSections] = useState<Section[]>([
-    {
-      id: "mock-intro",
-      name: "Intro",
-      lines: [
-        {
-          id: "line-1",
-          chords: [
-            { id: "chord-1", root: "C", bass: "E", quality: "maj", interval: "none", timing: 4 },
-            { id: "chord-2", root: "G", quality: "maj", interval: "none", timing: 6 },
-            { id: "chord-3", root: "A", quality: "m", interval: "none" },
-            { id: "chord-4", root: "F", quality: "maj", interval: "none", timing: 5 },
-          ]
-        },
-        {
-          id: "line-2",
-          chords: [
-            { id: "chord-5", root: "C", quality: "maj", interval: "7" },
-            { id: "chord-6", root: "G", quality: "maj", interval: "7" },
-            { id: "chord-7", root: "F", quality: "maj", interval: "maj7" },
-          ]
-        }
-      ]
-    },
-    {
-      id: "mock-verse",
-      name: "Verse",
-      lines: [
-        {
-          id: "line-1",
-          chords: [
-            { id: "chord-1", root: "C", bass: "E", quality: "maj", interval: "none", timing: 4 },
-            { id: "chord-2", root: "G", quality: "maj", interval: "none" },
-            { id: "chord-3", root: "A", quality: "m", interval: "none" },
-            { id: "chord-4", root: "F", quality: "maj", interval: "none", timing: 6 },
-          ]
-        },
-        {
-          id: "line-2",
-          chords: [
-            { id: "chord-5", root: "C", quality: "maj", interval: "7" },
-            { id: "chord-6", root: "G", quality: "maj", interval: "7" },
-            { id: "chord-7", root: "F", quality: "maj", interval: "maj7" },
-          ]
-        }
-      ]
-    }
-  ])
+  const [sections, setSections] = useState<Section[]>([])
 
   const headerHeight = insets.top + 30;
 
   // Handle new section data from modal
   useEffect(() => {
     if (newSection) {
-      const sectionData = JSON.parse(newSection)
-      setSections(prev => [...prev, sectionData])
+      try {
+        const sectionData = JSON.parse(newSection)
+        // Check if this is an edit or new section
+        const existingSectionIndex = sections.findIndex(s => s.id === sectionData.id)
+        if (existingSectionIndex >= 0) {
+          // Update existing section
+          setSections(prev => prev.map((section, index) => 
+            index === existingSectionIndex ? sectionData : section
+          ))
+        } else {
+          // Add new section
+          setSections(prev => [...prev, sectionData])
+        }
+      } catch (error) {
+        console.error("Failed to parse section data:", error)
+      }
     }
   }, [newSection])
 
@@ -187,7 +154,7 @@ export default function AddSongScreen() {
             />
           </View>
 
-          <View
+          {sections.length > 0 && <View
             className="rounded-lg border mb-3 p-4"
             style={{ backgroundColor: colors.card, borderColor: colors.border }}
           >
@@ -214,7 +181,7 @@ export default function AddSongScreen() {
                 <ChordProgressionPreview sections={[section]} />
               </View>
             ))}
-          </View>
+          </View>}
 
           {sections.length === 0 && (
             <View className="items-center justify-center py-8">

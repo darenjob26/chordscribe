@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { View, Text, TextInput, TouchableOpacity, ScrollView } from "react-native"
 import { useRouter, useLocalSearchParams } from "expo-router"
 import { Feather } from "@expo/vector-icons"
@@ -11,7 +11,7 @@ import { CHORD_ROOTS, CHORD_QUALITIES, CHORD_INTERVALS, TIMING_OPTIONS } from "@
 export default function NewSectionScreen() {
   const router = useRouter()
   const { colors } = useTheme()
-  const { id } = useLocalSearchParams<{ id: string }>()
+  const { id, editSection } = useLocalSearchParams<{ id: string, editSection?: string }>()
 
   const [sectionName, setSectionName] = useState("")
   const [isTimedMode, setIsTimedMode] = useState(false)
@@ -28,6 +28,14 @@ export default function NewSectionScreen() {
   const [selectedTiming, setSelectedTiming] = useState<number>(4)
   const [isSlashChord, setIsSlashChord] = useState(false)
   const [selectedBass, setSelectedBass] = useState<string | undefined>(undefined)
+
+  useEffect(() => {
+    if (editSection) {
+      const section = JSON.parse(editSection)
+      setSectionName(section.name)
+      setLines(section.lines)
+    }
+  }, [editSection])
 
   const handleAddChord = () => {
     if (!selectedRoot) return
@@ -97,9 +105,14 @@ export default function NewSectionScreen() {
       lines: finalLines
     }
 
-    // Pass the section back to the previous screen using setParams
-    router.setParams({ newSection: JSON.stringify(newSection) })
-    router.back()
+    // Pass the section back to the previous screen using replace
+    router.replace({
+      pathname: '/(tabs)/playbook/[id]/add-song',
+      params: { 
+        id,
+        newSection: JSON.stringify(newSection) 
+      }
+    })
   }
 
   const formatChordDisplay = (chord: Chord): string => {
