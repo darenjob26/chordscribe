@@ -12,7 +12,7 @@ import { router as Router } from 'expo-router'
 import { Song, Section, Chord } from "@/types/chord"
 import { KEY_OPTIONS } from "@/constants/chords"
 import ChordProgressionPreview from "@/components/ChordProgressionPreview"
-import { useSong } from "@/contexts/SongProvider"
+import { useSong } from "@/providers/song-provider"
 import { usePlaybook } from "@/providers/playbook-provider"
 
 export default function AddSongScreen() {

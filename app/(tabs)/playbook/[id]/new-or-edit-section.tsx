@@ -7,7 +7,7 @@ import ThemedButton from "@/components/ui/TButton"
 import { Picker } from "@react-native-picker/picker"
 import { Chord, Line, Section } from "@/types/chord"
 import { CHORD_ROOTS, CHORD_QUALITIES, CHORD_INTERVALS, TIMING_OPTIONS } from "@/constants/chords"
-import { useSong } from "@/contexts/SongProvider"
+import { useSong } from "@/providers/song-provider"
 
 export default function NewOrEditSectionScreen() {
   const router = useRouter()

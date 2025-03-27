@@ -1,5 +1,5 @@
 import { Stack } from "expo-router";
-import { SongProvider } from "@/contexts/SongProvider";
+import { SongProvider } from "@/providers/song-provider";
 
 export default function PlaybookLayout() {
   return (
