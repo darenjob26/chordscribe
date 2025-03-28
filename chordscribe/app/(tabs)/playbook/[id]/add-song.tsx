@@ -13,7 +13,7 @@ import { Song, Section, Chord } from "@/types/chord"
 import { KEY_OPTIONS } from "@/constants/chords"
 import ChordProgressionPreview from "@/components/ChordProgressionPreview"
 import { useSong } from "@/providers/song-provider"
-import { usePlaybook } from "@/providers/playbook-provider"
+import { usePlaybook } from "@/providers/PlaybookProvider"
 
 export default function AddSongScreen() {
   const router = useRouter()

@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import connectDB from './config/db';
 import songRoutes from './routes/songRoutes';
 import playbookRoutes from './routes/playbookRoutes';
+import userRoutes from './routes/userRoutes';
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ app.use(express.json());
 // Routes
 app.use('/api/songs', songRoutes);
 app.use('/api/playbooks', playbookRoutes);
+app.use('/api/users', userRoutes);
 
 const PORT = process.env.PORT || 3000;
 

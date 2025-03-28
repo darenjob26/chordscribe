@@ -7,7 +7,7 @@ import { Feather } from "@expo/vector-icons"
 import { useTheme } from "@/providers/theme-provider"
 import ThemedButton from "@/components/ui/TButton"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { usePlaybook } from "@/providers/playbook-provider"
+import { usePlaybook } from "@/providers/PlaybookProvider"
 import ChordProgressionPreview from "@/components/ChordProgressionPreview"
 
 // Types

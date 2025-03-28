@@ -15,7 +15,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { usePlaybook } from "@/providers/playbook-provider";
+import { usePlaybook } from "@/providers/PlaybookProvider";
 import { Playbook } from "@/types/playbook";
 
 export default function PlaybookScreen() {
@@ -30,7 +30,7 @@ export default function PlaybookScreen() {
   const handleAddPlaybook = async () => {
     if (newPlaybookName.trim()) {
       try {
-        await createPlaybook({ name: newPlaybookName });
+        await createPlaybook(newPlaybookName);
         setNewPlaybookName("");
         setIsAddDialogOpen(false);
       } catch (error) {
@@ -43,9 +43,10 @@ export default function PlaybookScreen() {
 
   const renderPlaybookItem = ({ item }: { item: Playbook }) => (
     <TouchableOpacity
+      key={item._id}
       className="flex-row items-center p-4 rounded-lg border mb-3"
       style={{ backgroundColor: colors.card, borderColor: colors.border }}
-      onPress={() => router.push(`/playbook/${item.id}` as any)}
+      onPress={() => router.push(`/playbook/${item._id}` as any)}
     >
       <View
         className="w-10 h-10 rounded-lg justify-center items-center mr-3 bg-gray-500"
@@ -61,7 +62,7 @@ export default function PlaybookScreen() {
           >
             {item.name}
           </Text>
-          {item.id === "default" && (
+          {item._id === "default" && (
             <Feather name="lock" size={14} color={colors.muted} />
           )}
         </View>
@@ -100,7 +101,7 @@ export default function PlaybookScreen() {
       <FlatList
         data={playbooks}
         renderItem={renderPlaybookItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item, index) => `${item._id}-${index}`}
         className="pb-4"
         showsVerticalScrollIndicator={false}
       />

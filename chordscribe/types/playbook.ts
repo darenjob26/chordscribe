@@ -8,20 +8,22 @@ export interface Song {
 }
 
 export interface Playbook {
-  id: string
+  _id: string
   name: string
   description?: string
   createdAt: string
   updatedAt: string
-  songs: Song[]
+  songs: string[]
 }
 
 export interface CreatePlaybookInput {
   name: string
   description?: string
+  songs: string[]
 }
 
 export interface UpdatePlaybookInput {
   name?: string
   description?: string
+  songs?: string[]
 }

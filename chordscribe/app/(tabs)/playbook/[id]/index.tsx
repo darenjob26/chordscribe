@@ -16,7 +16,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { usePlaybook } from "@/providers/playbook-provider";
+import { usePlaybook } from "@/providers/PlaybookProvider";
 import { Playbook, Song } from "@/types/playbook";
 
 export default function PlaybookSongsScreen() {
@@ -26,7 +26,7 @@ export default function PlaybookSongsScreen() {
   const insets = useSafeAreaInsets();
   const { playbooks, deleteSongFromPlaybook } = usePlaybook();
 
-  const playbook = playbooks.find(p => p.id === id);
+  const playbook = playbooks.find(p => p._id === id);
   const headerHeight = insets.top + 30;
 
   const handleAddSong = () => {
@@ -120,11 +120,11 @@ export default function PlaybookSongsScreen() {
         </View>
       ) : (
         <FlatList
-        data={playbook.songs}
-        renderItem={renderSongItem}
-        keyExtractor={(item) => item.id}
-        className="pb-4"
-        showsVerticalScrollIndicator={false}
+          data={playbook.songs}
+          renderItem={renderSongItem}
+          keyExtractor={(item) => item.id}
+          className="pb-4"
+          showsVerticalScrollIndicator={false}
         />
       )}
 

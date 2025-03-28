@@ -1,11 +1,17 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { isNetworkAvailable } from '../lib/network';
-import { Playbook } from '../types/playbook';
+import { Playbook, CreatePlaybookInput } from '@/types/playbook';
 
 const API_URL = 'http://localhost:3000/api/playbooks';
 const STORAGE_KEY_PREFIX = 'playbook:';
 
-export const createPlaybook = async (playbook: Omit<Playbook, 'id'>): Promise<Playbook> => {
+export const deleteAllPlaybooks = async () => {
+  const keys = await AsyncStorage.getAllKeys();
+  const playbookKeys = keys.filter(k => k.startsWith(STORAGE_KEY_PREFIX));
+  await AsyncStorage.multiRemove(playbookKeys);
+}
+
+export const createPlaybook = async (playbook: CreatePlaybookInput): Promise<Playbook> => {
   try {
     const localId = Date.now().toString();
     const isOnline = await isNetworkAvailable();
@@ -29,7 +35,13 @@ export const createPlaybook = async (playbook: Omit<Playbook, 'id'>): Promise<Pl
       return serverPlaybook;
     } else {
       // Offline: Store locally
-      const localPlaybook = { ...playbook, id: localId, synced: false };
+      const localPlaybook = { 
+        ...playbook, 
+        _id: localId, 
+        synced: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
       await AsyncStorage.setItem(
         `${STORAGE_KEY_PREFIX}${localId}`,
         JSON.stringify(localPlaybook)

@@ -41,6 +41,7 @@ const SectionSchema = new Schema({
 }, { _id: true });
 
 const SongSchema = new Schema({
+  userId: { type: String, required: true, ref: 'User' },
   title: { type: String, required: true },
   key: { type: String, required: true },
   sections: [SectionSchema],
