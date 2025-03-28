@@ -32,7 +32,6 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <PlaybookProvider>
           <SafeAreaProvider>
             <StatusBar style="auto" />
             <Stack
@@ -44,7 +43,6 @@ export default function RootLayout() {
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             </Stack>
           </SafeAreaProvider>
-        </PlaybookProvider>
       </AuthProvider>
     </ThemeProvider>
   );

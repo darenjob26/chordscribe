@@ -1,21 +1,23 @@
 "use client";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { router } from "expo-router";
+import { useRouter } from "expo-router";
 import type React from "react";
 import { createContext, useContext, useEffect, useState } from "react";
-import { 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
   signOut as firebaseSignOut,
   onAuthStateChanged,
-  User,
+  User as FirebaseUser,
   updateProfile as firebaseUpdateProfile
 } from 'firebase/auth';
 import { auth } from '@/config/firebase';
+import { registerUser, getUserByEmail, User as DbUser } from '@/services/authService';
 
 interface AuthContextType {
-  user: User | null;
+  user: FirebaseUser | null;
+  dbUser: DbUser | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
@@ -26,12 +28,31 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [dbUser, setDbUser] = useState<DbUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+
+  const fetchDbUser = async (firebaseUser: FirebaseUser) => {
+    try {
+      const userData = await getUserByEmail(firebaseUser.email!);
+      if (userData) {
+        setDbUser(userData);
+      }
+    } catch (error) {
+      console.error('Failed to fetch/register db user:', error);
+    }
+  };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      // await firebaseSignOut(auth);
       setUser(user);
+      if (user) {
+        await fetchDbUser(user);
+      } else {
+        setDbUser(null);
+      }
       setIsLoading(false);
     });
 
@@ -41,7 +62,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      await fetchDbUser(userCredential.user);
     } catch (error) {
       throw error;
     } finally {
@@ -52,7 +74,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUp = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      await register(userCredential.user);
     } catch (error) {
       throw error;
     } finally {
@@ -60,10 +83,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const register = async (firebaseUser: FirebaseUser) => {
+    try {
+      const newUser = await registerUser({
+        userId: firebaseUser.uid,
+        email: firebaseUser.email!,
+        name: firebaseUser.displayName || undefined
+      });
+      setDbUser(newUser);
+    } catch (error) {
+      console.error('Failed to fetch/register db user:', error);
+    }
+  };
+
   const signOut = async () => {
     setIsLoading(true);
     try {
       await firebaseSignOut(auth);
+      setDbUser(null);
       router.replace("/auth/login");
     } catch (error) {
       throw error;
@@ -78,6 +115,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     try {
       await firebaseUpdateProfile(user, updates);
+      if (updates.displayName && dbUser) {
+        setDbUser({ ...dbUser, name: updates.displayName });
+      }
     } catch (error) {
       throw error;
     } finally {
@@ -89,6 +129,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
+        dbUser,
         isLoading,
         signIn,
         signUp,

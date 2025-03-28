@@ -1,7 +1,8 @@
 import { Section } from './chord'
 
 export interface Song {
-  id: string
+  _id: string
+  userId: string
   title: string
   key: string
   sections: Section[]
@@ -9,6 +10,7 @@ export interface Song {
 
 export interface Playbook {
   _id: string
+  userId: string
   name: string
   description?: string
   createdAt: string
@@ -17,12 +19,14 @@ export interface Playbook {
 }
 
 export interface CreatePlaybookInput {
+  userId: string
   name: string
   description?: string
   songs: string[]
 }
 
 export interface UpdatePlaybookInput {
+  userId: string
   name?: string
   description?: string
   songs?: string[]

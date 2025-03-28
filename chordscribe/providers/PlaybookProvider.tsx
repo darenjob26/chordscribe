@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Playbook, CreatePlaybookInput, Song } from '../types/playbook';
 import * as playbookService from '../services/playbookService';
+import { useAuth } from './auth-provider';
 
 interface PlaybookContextType {
   playbooks: Playbook[];
@@ -30,6 +31,7 @@ export const PlaybookProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [currentPlaybook, setCurrentPlaybook] = useState<Playbook | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
   const fetchPlaybooks = async () => {
     try {
@@ -40,7 +42,9 @@ export const PlaybookProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       // If no playbooks exist, create a default one
       if (fetchedPlaybooks.length === 0) {
+        console.log('Creating default playbook');
         const defaultPlaybookInput: CreatePlaybookInput = {
+          userId: user?.uid || '',
           name: 'My Songs',
           description: 'Your default song collection',
           songs: []
@@ -62,6 +66,7 @@ export const PlaybookProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     // playbookService.deleteAllPlaybooks();
     // deletePlaybook("67e6d2a8c01c8412976bd665")
+    console.log('Fetching playbooks');
     fetchPlaybooks();
   }, []);
 
@@ -69,6 +74,7 @@ export const PlaybookProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       setError(null);
       const newPlaybookInput: CreatePlaybookInput = {
+        userId: user?.uid || '',
         name,
         description,
         songs: []
@@ -86,7 +92,7 @@ export const PlaybookProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       setError(null);
       const updatedPlaybook = await playbookService.updatePlaybook(id, updates);
-      setPlaybooks(prev => 
+      setPlaybooks(prev =>
         prev.map(pb => pb._id === id ? updatedPlaybook : pb)
       );
       if (currentPlaybook?._id === id) {
@@ -122,7 +128,7 @@ export const PlaybookProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         songs: [...playbook.songs, songId]
       });
 
-      setPlaybooks(prev => 
+      setPlaybooks(prev =>
         prev.map(pb => pb._id === playbookId ? updatedPlaybook : pb)
       );
       if (currentPlaybook?._id === playbookId) {
@@ -144,10 +150,10 @@ export const PlaybookProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         songs: playbook.songs.filter(id => id !== songId)
       });
 
-      setPlaybooks(prev => 
+      setPlaybooks(prev =>
         prev.map(pb => pb._id === playbookId ? updatedPlaybook : pb)
       );
-        if (currentPlaybook?._id === playbookId) {
+      if (currentPlaybook?._id === playbookId) {
         setCurrentPlaybook(updatedPlaybook);
       }
     } catch (err) {
