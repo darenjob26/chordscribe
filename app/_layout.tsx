@@ -6,6 +6,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import "react-native-reanimated";
 import { AuthProvider } from "@/providers/auth-provider";
+import { MongoDBProvider } from "@/providers/mongodb-provider";
 import "../global.css";
 
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -31,17 +32,19 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <SafeAreaProvider>
-          <StatusBar style="auto" />
-          <Stack
-            screenOptions={{ headerShown: false, headerTransparent: true }}
-          >
-            <Stack.Screen name="index" options={{ headerShown: false, }} />
-            <Stack.Screen name="auth/login" options={{ headerShown: false }} />
-            <Stack.Screen name="auth/signup" options={{ headerShown: false }} />
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          </Stack>
-        </SafeAreaProvider>
+        <MongoDBProvider>
+          <SafeAreaProvider>
+            <StatusBar style="auto" />
+            <Stack
+              screenOptions={{ headerShown: false, headerTransparent: true }}
+            >
+              <Stack.Screen name="index" options={{ headerShown: false, }} />
+              <Stack.Screen name="auth/login" options={{ headerShown: false }} />
+              <Stack.Screen name="auth/signup" options={{ headerShown: false }} />
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            </Stack>
+          </SafeAreaProvider>
+        </MongoDBProvider>
       </AuthProvider>
     </ThemeProvider>
   );
