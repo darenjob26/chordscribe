@@ -21,46 +21,17 @@ const ChordSchema = new Schema<IChord>(
   { timestamps: true }
 );
 
-// Create and export the Chord model
-// Handle case where mongoose.models might be undefined
-let ChordModel: Model<IChord>;
-
-// Safer model initialization with better error handling
-try {
-  // Check if mongoose is properly initialized
-  if (!mongoose || !mongoose.model) {
-    console.error('Mongoose not properly initialized in chord.ts');
-    // @ts-ignore - Create a dummy model to prevent crashes
-    ChordModel = {
-      findById: () => Promise.resolve(null),
-      find: () => Promise.resolve([]),
-      findOne: () => Promise.resolve(null),
-      findByIdAndUpdate: () => Promise.resolve(null),
-      findByIdAndDelete: () => Promise.resolve(null),
-      create: () => Promise.resolve({}),
-      new: () => ({}),
-    } as any;
-  } else {
-    try {
-      // Try to get existing model
-      ChordModel = mongoose.model<IChord>('Chord');
-    } catch (error) {
-      // Model doesn't exist, create new one
-      ChordModel = mongoose.model<IChord>('Chord', ChordSchema);
-    }
+// Function to get Chord model (ensures model is created only once)
+export function getChordModel(): Model<IChord> {
+  try {
+    // Try to get existing model first
+    return mongoose.model<IChord>('Chord');
+  } catch (e) {
+    // Model doesn't exist yet, create it
+    return mongoose.model<IChord>('Chord', ChordSchema);
   }
-} catch (error) {
-  console.error('Error initializing Chord model:', error);
-  // @ts-ignore - Create a dummy model to prevent crashes
-  ChordModel = {
-    findById: () => Promise.resolve(null),
-    find: () => Promise.resolve([]),
-    findOne: () => Promise.resolve(null),
-    findByIdAndUpdate: () => Promise.resolve(null),
-    findByIdAndDelete: () => Promise.resolve(null),
-    create: () => Promise.resolve({}),
-    new: () => ({}),
-  } as any;
 }
 
+// Create and export the Chord model
+const ChordModel = getChordModel();
 export default ChordModel; 

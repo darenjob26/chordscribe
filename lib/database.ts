@@ -1,98 +1,76 @@
 import mongoose from './mongodb-config';
 import 'react-native-get-random-values';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { 
-  initLocalStorageDB, 
-  isLocalStorageDBActive, 
-  getLocalStorageURI
-} from './local-storage-db';
+import { Platform } from 'react-native';
 
-// MongoDB connection URI - use a local MongoDB instance
-// Default to localhost but allow override with AsyncStorage
-const DEFAULT_MONGODB_URI = 'mongodb://localhost:27017/chordscribe';
+// MongoDB connection URI - use a local MongoDB instance by default
+// but allow override with AsyncStorage
+const DEFAULT_MONGODB_URI = 'mongodb://127.0.0.1:27017/chordscribe';
+const MONGODB_URI_STORAGE_KEY = '@mongodb_uri';
 
 // Track connection status
 let isConnected = false;
 let connectionAttemptInProgress = false;
+let connectionErrorMessage = '';
+let debugLog: string[] = [];
 
-// Function to check if mongoose is properly initialized
-const isMongooseValid = (): boolean => {
-  if (!mongoose) {
-    console.error('Mongoose is undefined');
-    return false;
+// Helper to add debug entry
+const addDebugEntry = (message: string) => {
+  const timestamp = new Date().toISOString();
+  const entry = `[${timestamp}] ${message}`;
+  console.log(`MongoDB Debug: ${entry}`);
+  debugLog.push(entry);
+  if (debugLog.length > 100) {
+    debugLog.shift(); // Keep only the last 100 entries
   }
-  
-  if (typeof mongoose !== 'object') {
-    console.error('Mongoose is not an object');
-    return false;
-  }
-  
-  if (!mongoose.connect || typeof mongoose.connect !== 'function') {
-    console.error('Mongoose.connect is not a function');
-    return false;
-  }
-  
-  return true;
+};
+
+// Get debug log
+export const getDebugLog = (): string[] => {
+  return [...debugLog];
+};
+
+// Clear debug log
+export const clearDebugLog = (): void => {
+  debugLog = [];
 };
 
 // Initialize database connection
 export const connectToDatabase = async (): Promise<boolean> => {
   try {
+    addDebugEntry(`Connection attempt started. Platform: ${Platform.OS}`);
+    
     // If already connected or connection attempt in progress, return early
     if (isConnected) {
-      console.log('Already connected to MongoDB');
+      addDebugEntry('Already connected to MongoDB');
       return true;
     }
     
     if (connectionAttemptInProgress) {
-      console.log('Connection attempt already in progress');
+      addDebugEntry('Connection attempt already in progress');
       return false;
     }
     
     connectionAttemptInProgress = true;
+    connectionErrorMessage = '';
+    addDebugEntry('Starting new connection attempt');
 
-    // For React Native, always use local storage DB in development
-    // and try to use MongoDB in production if available
-    const isDev = __DEV__;
-    
-    // Use local storage DB for React Native development
-    if (isDev) {
-      try {
-        // Initialize local storage DB if not already initialized
-        if (!(await isLocalStorageDBActive())) {
-          await initLocalStorageDB();
-        }
-        
-        // Mark as connected (local-only mode)
-        isConnected = true;
-        console.log('Using local storage database for development');
-        return true;
-      } catch (localDBError) {
-        console.warn('Error initializing local storage DB:', localDBError);
-      }
+    // Check if we're running in a web browser
+    if (Platform.OS === 'web') {
+      // Web browsers can't directly connect to MongoDB due to CORS and security restrictions
+      addDebugEntry('Running in web browser environment - direct MongoDB connections may be restricted');
     }
 
-    // Try to connect to a real MongoDB server if local DB failed or in production
+    // Get the MongoDB URI (from storage or default)
     let uri;
     try {
-      const storedURI = await AsyncStorage.getItem('@mongodb_uri');
+      addDebugEntry('Retrieving MongoDB URI from AsyncStorage');
+      const storedURI = await AsyncStorage.getItem(MONGODB_URI_STORAGE_KEY);
       uri = storedURI || DEFAULT_MONGODB_URI;
+      addDebugEntry(`Using MongoDB URI: ${uri}`);
     } catch (storageError) {
-      console.warn('Could not access AsyncStorage, using default URI', storageError);
+      addDebugEntry(`Could not access AsyncStorage: ${storageError}. Using default URI: ${DEFAULT_MONGODB_URI}`);
       uri = DEFAULT_MONGODB_URI;
-    }
-
-    // Check if mongoose is properly initialized
-    if (!isMongooseValid()) {
-      console.error('Mongoose is not properly initialized - using local storage DB instead');
-      
-      // Initialize local storage DB if not already initialized
-      if (!(await isLocalStorageDBActive())) {
-        await initLocalStorageDB();
-      }
-      
-      isConnected = true;
-      return true;
     }
 
     // Configure connection options
@@ -103,11 +81,11 @@ export const connectToDatabase = async (): Promise<boolean> => {
       connectTimeoutMS: 10000, // 10 seconds connection timeout
       socketTimeoutMS: 45000, // 45 seconds socket timeout
     };
+    addDebugEntry(`Connection options: ${JSON.stringify(options)}`);
 
     try {
       // Connect to MongoDB with timeout to prevent hanging
-      console.log('Attempting to connect to MongoDB at:', uri);
-      const connectPromise = mongoose.connect(uri, options as any);
+      addDebugEntry(`Connecting to MongoDB at: ${uri}`);
       
       // Create a timeout promise
       const timeoutPromise = new Promise((_, reject) => {
@@ -115,82 +93,101 @@ export const connectToDatabase = async (): Promise<boolean> => {
           reject(new Error('Connection timed out after 15 seconds'));
         }, 15000);
       });
+
+      // For web, handle special cases with different hosts
+      if (Platform.OS === 'web') {
+        addDebugEntry('Adapting URI for web environment');
+        // Try to normalize the URI for web environment
+        // In web, 'localhost' might need to be the same host as the web app
+        const currentHost = window.location.hostname;
+        addDebugEntry(`Current web host: ${currentHost}`);
+        if (uri.includes('localhost') && currentHost !== 'localhost') {
+          const modifiedUri = uri.replace('localhost', currentHost);
+          addDebugEntry(`Modified URI for web environment: ${modifiedUri}`);
+          uri = modifiedUri;
+        }
+      }
       
       // Race the connection against the timeout
-      await Promise.race([connectPromise, timeoutPromise]);
+      addDebugEntry('Initiating mongoose.connect with timeout race');
+      await Promise.race([mongoose.connect(uri, options as any), timeoutPromise]);
+      addDebugEntry('Promise.race completed');
       
       // Check connection state
-      const connectionStateValid = 
-        mongoose && 
-        mongoose.connection && 
-        typeof mongoose.connection === 'object' && 
-        'readyState' in mongoose.connection;
-      
-      if (connectionStateValid) {
-        isConnected = mongoose.connection.readyState === 1; // 1 = connected
-      } else {
-        console.error('Mongoose connection state is invalid');
-        isConnected = false;
-      }
+      const readyState = mongoose.connection.readyState;
+      addDebugEntry(`Mongoose connection readyState: ${readyState}`);
+      isConnected = readyState === 1; // 1 = connected
       
       if (isConnected) {
-        console.log('Successfully connected to MongoDB');
+        addDebugEntry('Successfully connected to MongoDB');
         
-        // Set up connection event handlers
-        if (mongoose.connection && 
-            typeof mongoose.connection === 'object' && 
-            'on' in mongoose.connection && 
-            typeof mongoose.connection.on === 'function') {
-          // Set up connection event handlers if available
-          try {
-            mongoose.connection.on('error', (err: Error) => {
-              console.error('MongoDB connection error:', err);
-              isConnected = false;
-            });
-            
-            mongoose.connection.on('disconnected', () => {
-              console.log('MongoDB disconnected');
-              isConnected = false;
-            });
-          } catch (eventError) {
-            console.error('Error setting up connection event handlers:', eventError);
-          }
+        // Set up connection event handlers if the method exists
+        if (mongoose.connection && 'on' in mongoose.connection) {
+          addDebugEntry('Setting up connection event handlers');
+          // Set up error handler
+          mongoose.connection.on('error', (err: Error) => {
+            addDebugEntry(`MongoDB connection error: ${err.message}`);
+            isConnected = false;
+            connectionErrorMessage = err.message;
+          });
+          
+          // Set up disconnection handler
+          mongoose.connection.on('disconnected', () => {
+            addDebugEntry('MongoDB disconnected');
+            isConnected = false;
+          });
         } else {
-          console.warn('Mongoose connection event handlers not available');
+          addDebugEntry('Connection event handlers not available on this mongoose instance');
         }
       } else {
-        console.error('Failed to connect to MongoDB');
+        addDebugEntry(`Failed to connect to MongoDB - connection state: ${readyState}`);
+        connectionErrorMessage = `Connection state: ${readyState}`;
       }
-    } catch (mongoError) {
-      console.error('Error connecting to MongoDB:', mongoError);
+    } catch (mongoError: any) {
+      addDebugEntry(`Error connecting to MongoDB: ${mongoError.message || 'Unknown error'}`);
+      if (mongoError.stack) {
+        addDebugEntry(`Error stack: ${mongoError.stack.split('\n')[0]}`);
+      }
       
-      // Fall back to local storage DB if MongoDB connection fails
-      if (!(await isLocalStorageDBActive())) {
-        await initLocalStorageDB();
+      // Add special error handling for common web browser issues
+      if (Platform.OS === 'web') {
+        if (mongoError.message && (
+          mongoError.message.includes('CORS') || 
+          mongoError.message.includes('cross-origin') ||
+          mongoError.message.includes('access-control-allow-origin')
+        )) {
+          connectionErrorMessage = 
+            'Cross-Origin Request Blocked: MongoDB connections from web browsers are restricted due to security policies. ' +
+            'Consider using a backend API server or MongoDB Atlas with proper CORS configuration.';
+          addDebugEntry(connectionErrorMessage);
+        } else if (mongoError.message && mongoError.message.includes('NetworkError')) {
+          connectionErrorMessage = 
+            'Network Error: Unable to connect to MongoDB from the web browser. ' +
+            'Web browsers cannot make direct TCP connections to MongoDB. ' +
+            'Consider using a MongoDB Atlas connection string with proper security settings.';
+          addDebugEntry(connectionErrorMessage);
+        } else {
+          connectionErrorMessage = mongoError.message || 'Unknown MongoDB error';
+          addDebugEntry(`Generic connection error: ${connectionErrorMessage}`);
+        }
+      } else {
+        connectionErrorMessage = mongoError.message || 'Unknown MongoDB error';
+        addDebugEntry(`Platform-specific connection error: ${connectionErrorMessage}`);
       }
       
-      // Mark as connected in local-only mode
-      isConnected = true;
-      console.log('Falling back to local storage database');
-    }
-    
-    return isConnected;
-  } catch (error) {
-    console.error('Error connecting to database:', error);
-    
-    // As a last resort, try to use local storage DB
-    try {
-      if (!(await isLocalStorageDBActive())) {
-        await initLocalStorageDB();
-      }
-      isConnected = true;
-      console.log('Using local storage DB as last resort');
-      return true;
-    } catch (localDBError) {
-      console.error('Failed to use local storage DB as fallback:', localDBError);
       isConnected = false;
-      return false;
     }
+    
+    addDebugEntry(`Connection attempt completed. Connected: ${isConnected}`);
+    return isConnected;
+  } catch (error: any) {
+    addDebugEntry(`Unhandled error in connectToDatabase: ${error.message || 'Unknown error'}`);
+    if (error.stack) {
+      addDebugEntry(`Unhandled error stack: ${error.stack.split('\n')[0]}`);
+    }
+    connectionErrorMessage = error.message || 'Unknown error';
+    isConnected = false;
+    return false;
   } finally {
     connectionAttemptInProgress = false;
   }
@@ -199,47 +196,60 @@ export const connectToDatabase = async (): Promise<boolean> => {
 // Disconnect from database
 export const disconnectFromDatabase = async (): Promise<boolean> => {
   if (!isConnected) {
+    addDebugEntry('Not connected, skipping disconnect');
     return true;
   }
   
   try {
-    // Only disconnect if we're connected to a real MongoDB
-    if (isMongooseValid() && 
-        mongoose.connection && 
-        mongoose.connection.readyState === 1 && 
-        mongoose.disconnect && 
-        typeof mongoose.disconnect === 'function') {
-      await mongoose.disconnect();
-    }
-    
+    addDebugEntry('Disconnecting from MongoDB');
+    await mongoose.disconnect();
     isConnected = false;
-    console.log('Disconnected from database');
+    addDebugEntry('Successfully disconnected from MongoDB');
     return true;
-  } catch (error) {
-    console.error('Error disconnecting from database:', error);
+  } catch (error: any) {
+    addDebugEntry(`Error disconnecting from MongoDB: ${error.message || 'Unknown error'}`);
     return false;
   }
 };
 
 // Check connection status
 export const isConnectedToDatabase = (): boolean => {
-  if (isMongooseValid() && 
-      mongoose.connection && 
-      mongoose.connection.readyState === 1) {
-    isConnected = true;
+  // Update the connection state based on mongoose connection
+  if (mongoose.connection) {
+    const readyState = mongoose.connection.readyState;
+    const previousState = isConnected;
+    isConnected = readyState === 1;
+    
+    if (previousState !== isConnected) {
+      addDebugEntry(`Connection state changed to: ${isConnected ? 'connected' : 'disconnected'} (readyState: ${readyState})`);
+    }
   }
   
   return isConnected;
 };
 
+// Get connection error message
+export const getConnectionErrorMessage = (): string => {
+  return connectionErrorMessage;
+};
+
 // Set a custom MongoDB URI
 export const setMongoDBURI = async (uri: string): Promise<boolean> => {
   try {
-    await AsyncStorage.setItem('@mongodb_uri', uri);
-    console.log('MongoDB URI updated. Please reconnect to apply changes.');
-    return true;
-  } catch (error) {
-    console.error('Error saving MongoDB URI:', error);
+    addDebugEntry(`Setting MongoDB URI to: ${uri}`);
+    await AsyncStorage.setItem(MONGODB_URI_STORAGE_KEY, uri);
+    
+    // If already connected, disconnect first
+    if (isConnected) {
+      addDebugEntry('Already connected, disconnecting before reconnecting with new URI');
+      await disconnectFromDatabase();
+    }
+    
+    // Reconnect with the new URI
+    addDebugEntry('Reconnecting with new URI');
+    return await connectToDatabase();
+  } catch (error: any) {
+    addDebugEntry(`Error saving MongoDB URI: ${error.message || 'Unknown error'}`);
     return false;
   }
 }; 

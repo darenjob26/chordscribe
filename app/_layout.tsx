@@ -6,7 +6,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import "react-native-reanimated";
 import { AuthProvider } from "@/providers/auth-provider";
-import { MongoDBProvider } from "@/providers/mongodb-provider";
+import { MongoDBProvider } from "@/lib/providers/MongoDBProvider";
 import "../global.css";
 
 import { SafeAreaProvider } from "react-native-safe-area-context";

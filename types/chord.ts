@@ -1,8 +1,9 @@
+// Define interfaces for song representation in the UI
 export interface Chord {
   id: string
   root: string
   quality: string
-  interval: string
+  interval?: string
   timing?: number
   bass?: string  // For slash chords
 }

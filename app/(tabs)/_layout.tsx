@@ -38,6 +38,15 @@ export default function FeaturesLayout() {
           ),
         }}
         />
+        <Tabs.Screen
+          name="mongodb-test"
+          options={{
+            title: 'MongoDB Test',
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="server-outline" color={color} size={size} />
+            ),
+          }}
+        />
       </Tabs>
     </PlaybookProvider>
   );

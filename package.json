@@ -9,7 +9,14 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "test": "jest --watchAll",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "mongodb:check": "bash ./scripts/ensure-mongodb.sh",
+    "mongodb:setup": "node ./scripts/setup-mongodb-node.js",
+    "mongodb:setup:shell": "mongosh ./scripts/setup-mongodb.js",
+    "mongodb:test": "npx expo start",
+    "mongodb:diagnose": "node ./scripts/mongodb-diagnostic.js",
+    "mongodb:fix": "node ./scripts/fix-mongodb-connection.js",
+    "mongodb:test:web": "npx expo start --web"
   },
   "jest": {
     "preset": "jest-expo"
@@ -42,6 +49,7 @@
     "expo-web-browser": "~14.0.2",
     "firebase": "^11.5.0",
     "lucide-react": "^0.483.0",
+    "mongodb": "^5.0.0",
     "mongoose": "^8.13.0",
     "nativewind": "^4.1.23",
     "react": "18.3.1",

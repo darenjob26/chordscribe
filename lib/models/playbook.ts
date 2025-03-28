@@ -18,46 +18,17 @@ const PlaybookSchema = new Schema<IPlaybook>(
   { timestamps: true }
 );
 
-// Create and export the Playbook model
-// Handle case where mongoose.models might be undefined
-let PlaybookModel: Model<IPlaybook>;
-
-// Safer model initialization with better error handling
-try {
-  // Check if mongoose is properly initialized
-  if (!mongoose || !mongoose.model) {
-    console.error('Mongoose not properly initialized in playbook.ts');
-    // @ts-ignore - Create a dummy model to prevent crashes
-    PlaybookModel = {
-      findById: () => Promise.resolve(null),
-      find: () => Promise.resolve([]),
-      findOne: () => Promise.resolve(null),
-      findByIdAndUpdate: () => Promise.resolve(null),
-      findByIdAndDelete: () => Promise.resolve(null),
-      create: () => Promise.resolve({}),
-      new: () => ({}),
-    } as any;
-  } else {
-    try {
-      // Try to get existing model
-      PlaybookModel = mongoose.model<IPlaybook>('Playbook');
-    } catch (error) {
-      // Model doesn't exist, create new one
-      PlaybookModel = mongoose.model<IPlaybook>('Playbook', PlaybookSchema);
-    }
+// Function to get Playbook model (ensures model is created only once)
+export function getPlaybookModel(): Model<IPlaybook> {
+  try {
+    // Try to get existing model first
+    return mongoose.model<IPlaybook>('Playbook');
+  } catch (e) {
+    // Model doesn't exist yet, create it
+    return mongoose.model<IPlaybook>('Playbook', PlaybookSchema);
   }
-} catch (error) {
-  console.error('Error initializing Playbook model:', error);
-  // @ts-ignore - Create a dummy model to prevent crashes
-  PlaybookModel = {
-    findById: () => Promise.resolve(null),
-    find: () => Promise.resolve([]),
-    findOne: () => Promise.resolve(null),
-    findByIdAndUpdate: () => Promise.resolve(null),
-    findByIdAndDelete: () => Promise.resolve(null),
-    create: () => Promise.resolve({}),
-    new: () => ({}),
-  } as any;
 }
 
+// Create and export the Playbook model
+const PlaybookModel = getPlaybookModel();
 export default PlaybookModel; 

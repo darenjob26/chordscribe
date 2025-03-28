@@ -16,46 +16,17 @@ const SectionSchema = new Schema<ISection>(
   { timestamps: true }
 );
 
-// Create and export the Section model
-// Handle case where mongoose.models might be undefined
-let SectionModel: Model<ISection>;
-
-// Safer model initialization with better error handling
-try {
-  // Check if mongoose is properly initialized
-  if (!mongoose || !mongoose.model) {
-    console.error('Mongoose not properly initialized in section.ts');
-    // @ts-ignore - Create a dummy model to prevent crashes
-    SectionModel = {
-      findById: () => Promise.resolve(null),
-      find: () => Promise.resolve([]),
-      findOne: () => Promise.resolve(null),
-      findByIdAndUpdate: () => Promise.resolve(null),
-      findByIdAndDelete: () => Promise.resolve(null),
-      create: () => Promise.resolve({}),
-      new: () => ({}),
-    } as any;
-  } else {
-    try {
-      // Try to get existing model
-      SectionModel = mongoose.model<ISection>('Section');
-    } catch (error) {
-      // Model doesn't exist, create new one
-      SectionModel = mongoose.model<ISection>('Section', SectionSchema);
-    }
+// Function to get Section model (ensures model is created only once)
+export function getSectionModel(): Model<ISection> {
+  try {
+    // Try to get existing model first
+    return mongoose.model<ISection>('Section');
+  } catch (e) {
+    // Model doesn't exist yet, create it
+    return mongoose.model<ISection>('Section', SectionSchema);
   }
-} catch (error) {
-  console.error('Error initializing Section model:', error);
-  // @ts-ignore - Create a dummy model to prevent crashes
-  SectionModel = {
-    findById: () => Promise.resolve(null),
-    find: () => Promise.resolve([]),
-    findOne: () => Promise.resolve(null),
-    findByIdAndUpdate: () => Promise.resolve(null),
-    findByIdAndDelete: () => Promise.resolve(null),
-    create: () => Promise.resolve({}),
-    new: () => ({}),
-  } as any;
 }
 
+// Create and export the Section model
+const SectionModel = getSectionModel();
 export default SectionModel; 
