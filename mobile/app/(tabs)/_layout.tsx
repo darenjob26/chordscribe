@@ -2,15 +2,22 @@ import { Stack, Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { PlaybookProvider } from "@/providers/playbook-provider";
 import { useTheme } from "@/providers/theme-provider";
+import { startSyncService } from "@/services/syncService";
+import { useEffect } from "react";
 
 export default function FeaturesLayout() {
   const { colors } = useTheme();
 
+  useEffect(() => {
+    const unsubscribe = startSyncService();
+    return () => unsubscribe();
+  }, []);
+
   return (
     <PlaybookProvider>
-      <Tabs 
-        screenOptions={{ 
-          headerShown: false, 
+      <Tabs
+        screenOptions={{
+          headerShown: false,
           tabBarActiveTintColor: colors.text,
           tabBarStyle: {
             backgroundColor: colors.card,
