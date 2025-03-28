@@ -1,7 +1,7 @@
 "use client";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
+import { Stack } from "expo-router";
 import type React from "react";
 import { createContext, useContext, useEffect, useState } from "react";
 import {
@@ -31,7 +31,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [dbUser, setDbUser] = useState<DbUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
 
   const fetchDbUser = async (firebaseUser: FirebaseUser) => {
     try {
@@ -101,7 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await firebaseSignOut(auth);
       setDbUser(null);
-      router.replace("/auth/login");
+      // Navigation will be handled by the auth state change
     } catch (error) {
       throw error;
     } finally {

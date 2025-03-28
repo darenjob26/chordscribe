@@ -3,7 +3,7 @@
 import { useAuth } from "@/providers/auth-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { Feather } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { Stack } from "expo-router";
 import {
   Alert,
   ScrollView,
@@ -100,9 +100,8 @@ function SettingsItem({
 }
 
 export default function AccountScreen() {
-  const { signOut, user } = useAuth();
+  const { signOut, user, dbUser } = useAuth();
   const { colors, toggleTheme, isDark } = useTheme();
-  const router = useRouter();
   const insets = useSafeAreaInsets();
   const [showKey, setShowKey] = useState(true);
   const [metronomeSound, setMetronomeSound] = useState(true);
@@ -164,19 +163,19 @@ export default function AccountScreen() {
           <SettingsItem
             icon="user"
             label="Name"
-            value={user?.name || "Not set"}
-            onPress={() => router.push("/account/edit-profile")}
+            value={dbUser?.name || user?.displayName || "Not set"}
+            onPress={() => Stack.push("/account/edit-profile")}
           />
           <SettingsItem
             icon="mail"
             label="Email"
             value={user?.email || "Not set"}
-            onPress={() => router.push("/account/edit-profile")}
+            onPress={() => Stack.push("/account/edit-profile")}
           />
           <SettingsItem
             icon="lock"
             label="Change Password"
-            onPress={() => router.push("/account/change-password")}
+            onPress={() => Stack.push("/account/change-password")}
           />
         </SettingsSection>
 

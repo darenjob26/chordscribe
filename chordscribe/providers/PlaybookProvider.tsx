@@ -66,7 +66,6 @@ export const PlaybookProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     // playbookService.deleteAllPlaybooks();
     // deletePlaybook("67e6d2a8c01c8412976bd665")
-    console.log('Fetching playbooks');
     fetchPlaybooks();
   }, []);
 
