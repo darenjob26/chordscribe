@@ -1,7 +1,10 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+"use client";
+
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { Playbook, CreatePlaybookInput, Song } from '../types/playbook';
 import * as playbookService from '../services/playbookService';
 import { useAuth } from './auth-provider';
+import { startSyncService, setSyncCallback } from "@/services/syncService";
 
 interface PlaybookContextType {
   playbooks: Playbook[];
@@ -14,6 +17,7 @@ interface PlaybookContextType {
   setCurrentPlaybook: (playbook: Playbook | null) => void;
   addSongToPlaybook: (playbookId: string, songId: string) => Promise<void>;
   removeSongFromPlaybook: (playbookId: string, songId: string) => Promise<void>;
+  refreshPlaybooks: () => Promise<void>;
 }
 
 const PlaybookContext = createContext<PlaybookContextType | undefined>(undefined);
@@ -27,53 +31,78 @@ export const usePlaybook = () => {
 };
 
 export const PlaybookProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, dbUser } = useAuth();
   const [playbooks, setPlaybooks] = useState<Playbook[]>([]);
   const [currentPlaybook, setCurrentPlaybook] = useState<Playbook | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { dbUser } = useAuth();
+  const isRefreshingRef = useRef(false);
 
-  const fetchPlaybooks = async () => {
+  const fetchPlaybooks = useCallback(async () => {
+    if (!dbUser?.userId || isRefreshingRef.current) {
+      console.log('Skipping fetch: no userId or already refreshing');
+      return;
+    }
+    
     try {
-      setIsLoading(true);
+      isRefreshingRef.current = true;
+      console.log('Fetching playbooks...');
       setError(null);
       const fetchedPlaybooks = await playbookService.getPlaybooks();
+      console.log('Fetched playbooks:', fetchedPlaybooks.length);
       setPlaybooks(fetchedPlaybooks);
 
       // If no playbooks exist, create a default one
-      // if (fetchedPlaybooks.length === 0) {
-      //   console.log('Creating default playbook');
-      //   const defaultPlaybookInput: CreatePlaybookInput = {
-      //     userId: dbUser?.userId || null,
-      //     name: 'My Songs',
-      //     description: 'Your default song collection',
-      //     songs: []
-      //   };
-      //   const defaultPlaybook = await playbookService.createPlaybook(defaultPlaybookInput);
-      //   setPlaybooks([defaultPlaybook]);
-      //   setCurrentPlaybook(defaultPlaybook);
-      // } else if (!currentPlaybook) {
-      //   // If we have playbooks but no current selection, select the first one
-      //   setCurrentPlaybook(fetchedPlaybooks[0]);
-      // }
+      if (fetchedPlaybooks.length === 0) {
+        console.log('Creating default playbook');
+        const defaultPlaybookInput: CreatePlaybookInput = {
+          userId: dbUser?.userId || null,
+          name: 'My Songs',
+          description: 'Your default song collection',
+          songs: []
+        };
+        const defaultPlaybook = await playbookService.createPlaybook(defaultPlaybookInput);
+        setPlaybooks([defaultPlaybook]);
+        setCurrentPlaybook(defaultPlaybook);
+      } else if (!currentPlaybook) {
+        // If we have playbooks but no current selection, select the first one
+        setCurrentPlaybook(fetchedPlaybooks[0]);
+      }
+
     } catch (err) {
+      console.error('Error fetching playbooks:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch playbooks');
     } finally {
       setIsLoading(false);
+      isRefreshingRef.current = false;
     }
-  };
+  }, [dbUser?.userId]);
 
   useEffect(() => {
-    // playbookService.deleteAllPlaybooks();
-    // deletePlaybook("67e6d2a8c01c8412976bd665")
-    fetchPlaybooks();
-  }, []);
+    if (dbUser?.userId) {
+      fetchPlaybooks();
+    }
+  }, [dbUser?.userId, fetchPlaybooks]);
+
+  useEffect(() => {
+    console.log('Setting up sync service');
+    setSyncCallback(fetchPlaybooks);
+    const unsubscribe = startSyncService();
+    
+    return () => {
+      console.log('Cleaning up sync service');
+      setSyncCallback(() => {});
+      unsubscribe();
+    };
+  }, [fetchPlaybooks]);
 
   const createPlaybook = async (name: string, description?: string) => {
+    if (!dbUser?.userId) return;
+
     try {
       setError(null);
       const newPlaybookInput: CreatePlaybookInput = {
-        userId: dbUser?.userId || '',
+        userId: dbUser.userId,
         name,
         description,
         songs: []
@@ -161,6 +190,9 @@ export const PlaybookProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
+  const refreshPlaybooks = async () => {
+    await fetchPlaybooks();
+  };
 
   const value = {
     playbooks,
@@ -173,6 +205,7 @@ export const PlaybookProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setCurrentPlaybook,
     addSongToPlaybook,
     removeSongFromPlaybook,
+    refreshPlaybooks
   };
 
   return (

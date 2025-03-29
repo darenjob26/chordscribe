@@ -16,6 +16,7 @@ export interface Playbook {
   createdAt: string
   updatedAt: string
   songs: string[]
+  synced?: boolean
 }
 
 export interface CreatePlaybookInput {

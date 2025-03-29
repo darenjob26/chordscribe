@@ -81,7 +81,7 @@ export const getPlaybooks = async (): Promise<Playbook[]> => {
     } else {
       // Offline: Get from local storage
       console.log('get offline')
-      // deleteAllPlaybooks()
+      // deleteAllPlaybooks() // - dont delete this
       const keys = await AsyncStorage.getAllKeys();
       const playbookKeys = keys.filter(k => k.startsWith(STORAGE_KEY_PREFIX));
       const playbooks = await Promise.all(
@@ -90,8 +90,28 @@ export const getPlaybooks = async (): Promise<Playbook[]> => {
           return playbookStr ? JSON.parse(playbookStr) : null;
         })
       );
-      // console.log('fetched', playbooks.map(pb => ({_id: pb._id, name: pb.name, synced: pb.synced})))
-      return playbooks.filter((playbook): playbook is Playbook => playbook !== null);
+      const filteredPlaybooks = playbooks.filter((playbook): playbook is Playbook => playbook !== null);
+
+      // Only create default playbook if there are no playbooks at all
+      if (filteredPlaybooks.length === 0) {
+        const defaultPlaybook: Playbook = {
+          name: 'My Songs',
+          description: 'Your default song collection',
+          songs: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          userId: null,
+          synced: false
+        };
+        const localId = Date.now().toString();
+        await AsyncStorage.setItem(
+          `${STORAGE_KEY_PREFIX}${localId}`,
+          JSON.stringify(defaultPlaybook)
+        );
+        return [defaultPlaybook];
+      }
+
+      return filteredPlaybooks;
     }
   } catch (error) {
     console.error('Error fetching playbooks:', error);
@@ -187,55 +207,35 @@ export const deletePlaybook = async (playbookId: string): Promise<void> => {
 };
 
 export const syncOfflinePlaybooks = async (): Promise<void> => {
-  
   const isOnline = await isNetworkAvailable();
   if (!isOnline) return;
 
   const keys = await AsyncStorage.getAllKeys();
-  const playbookKeys = keys.filter(k => {
-    return k.startsWith(STORAGE_KEY_PREFIX)
-  });
+  const playbookKeys = keys.filter(k => k.startsWith(STORAGE_KEY_PREFIX));
 
   for (const key of playbookKeys) {
     const playbookStr = await AsyncStorage.getItem(key);
-    if(playbookStr){
+    if (playbookStr) {
       const playbook = JSON.parse(playbookStr);
       try {
-        if(!playbook.synced){
-          console.log('syncing offline playbook', playbook._id, playbook.name)
-          const { ...playbookData } = playbook;
-          playbookData.synced = true;
-          const syncedPlaybook = await createPlaybook(playbookData);
-          await AsyncStorage.setItem(key, JSON.stringify(syncedPlaybook));
+        if (!playbook.synced) {
+          console.log('syncing offline playbook', playbook._id, playbook.name);
+          
+          if (!playbook._id) {
+            // New playbook that needs to be created
+            const { synced, ...playbookData } = playbook;
+            const syncedPlaybook = await createPlaybook(playbookData);
+            await AsyncStorage.setItem(key, JSON.stringify({ ...syncedPlaybook, synced: true }));
+          } else {
+            // Existing playbook that needs to be updated
+            const { synced, _id, ...playbookData } = playbook;
+            const syncedPlaybook = await updatePlaybook(_id, playbookData);
+            await AsyncStorage.setItem(key, JSON.stringify({ ...syncedPlaybook, synced: true }));
+          }
         }
       } catch (error) {
-        console.error('Error parsing playbook:', error);
+        console.error('Error syncing playbook:', error);
       }
     }
   }
-
-  // for (const key of unsyncedPlaybookKeys) {
-  //   const playbookStr = await AsyncStorage.getItem(key);
-  //   if (playbookStr) {
-  //     const playbook = JSON.parse(playbookStr);
-  //     try {
-  //       if (!playbook._id) {
-  //         // New playbook that needs to be created
-  //         const { playbookData } = playbook;
-  //         const syncedPlaybook = await createPlaybook({
-  //           ...playbookData,
-  //           synced: true
-  //         });
-  //         await AsyncStorage.setItem(key, JSON.stringify(syncedPlaybook));
-  //       } else {
-  //         // Existing playbook that needs to be updated
-  //         const { ...playbookData } = playbook;
-  //         const syncedPlaybook = await updatePlaybook(playbook._id, playbookData);
-  //         await AsyncStorage.setItem(key, JSON.stringify(syncedPlaybook));
-  //       }
-  //     } catch (error) {
-  //       console.error('Sync failed for playbook:', playbook);
-  //     }
-  //   }
-  // }
 }; 
