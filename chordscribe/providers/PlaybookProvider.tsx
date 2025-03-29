@@ -5,6 +5,7 @@ import { Playbook, CreatePlaybookInput, Song } from '../types/playbook';
 import * as playbookService from '../services/playbookService';
 import { useAuth } from './auth-provider';
 import { startSyncService, setSyncCallback } from "@/services/syncService";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface PlaybookContextType {
   playbooks: Playbook[];
@@ -43,7 +44,7 @@ export const PlaybookProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       console.log('Skipping fetch: no userId or already refreshing');
       return;
     }
-    
+
     try {
       isRefreshingRef.current = true;
       console.log('Fetching playbooks...');
@@ -80,6 +81,7 @@ export const PlaybookProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   useEffect(() => {
     if (dbUser?.userId) {
+      // playbookService.deleteAllPlaybooks();
       fetchPlaybooks();
     }
   }, [dbUser?.userId, fetchPlaybooks]);
@@ -88,10 +90,10 @@ export const PlaybookProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     console.log('Setting up sync service');
     setSyncCallback(fetchPlaybooks);
     const unsubscribe = startSyncService();
-    
+
     return () => {
       console.log('Cleaning up sync service');
-      setSyncCallback(() => {});
+      setSyncCallback(() => { });
       unsubscribe();
     };
   }, [fetchPlaybooks]);

@@ -1,16 +1,17 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { isNetworkAvailable } from '../lib/network';
-import { Playbook, CreatePlaybookInput } from '@/types/playbook';
+import { Playbook, CreatePlaybookInput, Song } from '@/types/playbook';
 import { useAuth } from '@/providers/auth-provider';
 import { usePlaybook } from '@/providers/PlaybookProvider';
 
 const API_URL = 'http://localhost:3000/api/playbooks';
-const STORAGE_KEY_PREFIX = 'playbook:';
+const PLAYBOOK_STORAGE_KEY_PREFIX = 'playbook:';
+const SONG_STORAGE_KEY_PREFIX = 'song:';
 
 export const deleteAllPlaybooks = async () => {
   console.log('deleting all playbook local')
   const keys = await AsyncStorage.getAllKeys();
-  const playbookKeys = keys.filter(k => k.startsWith(STORAGE_KEY_PREFIX));
+  const playbookKeys = keys.filter(k => k.startsWith(PLAYBOOK_STORAGE_KEY_PREFIX));
   await AsyncStorage.multiRemove(playbookKeys);
 }
 
@@ -30,27 +31,27 @@ export const createPlaybook = async (playbook: CreatePlaybookInput): Promise<Pla
           synced: true
         })
       });
-      
+
       const serverPlaybook = await response.json();
       // Use server's _id for storage
       await AsyncStorage.setItem(
-        `${STORAGE_KEY_PREFIX}${serverPlaybook._id}`,
+        `${PLAYBOOK_STORAGE_KEY_PREFIX}${serverPlaybook._id}`,
         JSON.stringify({ ...serverPlaybook, synced: true })
       );
-      
+
       return serverPlaybook;
     } else {
       // Offline: Store locally
       const localId = Date.now().toString();
-      const localPlaybook = { 
-        ...playbook, 
-        _id: 'local_'+localId, // Add local _id for offline tracking
+      const localPlaybook = {
+        ...playbook,
+        _id: 'local_' + localId, // Add local _id for offline tracking
         synced: false,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
       await AsyncStorage.setItem(
-        `${STORAGE_KEY_PREFIX}${localId}`,
+        `${PLAYBOOK_STORAGE_KEY_PREFIX}${localId}`,
         JSON.stringify(localPlaybook)
       );
       return localPlaybook;
@@ -72,26 +73,26 @@ export const getPlaybooks = async (userId: string): Promise<Playbook[]> => {
       // Online: Fetch from server
       const response = await fetch(`${API_URL}?userId=${userId}`);
       const serverPlaybooks = await response.json();
-      
+
       // Clear existing playbooks from local storage
       const keys = await AsyncStorage.getAllKeys();
-      const playbookKeys = keys.filter(k => k.startsWith(STORAGE_KEY_PREFIX));
+      const playbookKeys = keys.filter(k => k.startsWith(PLAYBOOK_STORAGE_KEY_PREFIX));
       await AsyncStorage.multiRemove(playbookKeys);
-      
+
       // Update local storage with server data
       for (const playbook of serverPlaybooks) {
         await AsyncStorage.setItem(
-          `${STORAGE_KEY_PREFIX}${playbook._id}`,
+          `${PLAYBOOK_STORAGE_KEY_PREFIX}${playbook._id}`,
           JSON.stringify({ ...playbook, synced: true })
         );
       }
-      
+
       playbooksList = serverPlaybooks;
     } else {
       // Offline: Get from local storage
       console.log('get offline')
       const keys = await AsyncStorage.getAllKeys();
-      const playbookKeys = keys.filter(k => k.startsWith(STORAGE_KEY_PREFIX));
+      const playbookKeys = keys.filter(k => k.startsWith(PLAYBOOK_STORAGE_KEY_PREFIX));
       const playbooks = await Promise.all(
         playbookKeys.map(async (key) => {
           const playbookStr = await AsyncStorage.getItem(key);
@@ -116,14 +117,45 @@ export const getPlaybooks = async (userId: string): Promise<Playbook[]> => {
         };
         const localId = Date.now().toString();
         await AsyncStorage.setItem(
-          `${STORAGE_KEY_PREFIX}${localId}`,
+          `${PLAYBOOK_STORAGE_KEY_PREFIX}${localId}`,
           JSON.stringify(defaultPlaybook)
         );
 
         playbooksList = [defaultPlaybook];
-      }
+      } else {
+        // Fetch song details for each playbook's songs
+        const songKeys = keys.filter(k => k.startsWith(SONG_STORAGE_KEY_PREFIX));
+        const songs = await Promise.all(
+          songKeys.map(async (key) => {
+            const songStr = await AsyncStorage.getItem(key);
+            return songStr ? JSON.parse(songStr) : null;
+          })
+        );
 
-      playbooksList = filteredPlaybooks;
+        // Create a map of song IDs to song objects for faster lookup
+        const songMap = new Map(
+          songs
+            .filter((song): song is Song => song !== null)
+            .map(song => [song._id, song])
+        );
+
+        playbooksList = filteredPlaybooks.map(playbook => {
+          // Convert all songs to song objects
+          const songObjects = playbook.songs.map(song => {
+            // If it's already a song object, return it
+            if (typeof song === 'object' && song !== null) {
+              return song;
+            }
+            // If it's a string (ID), look up the song object
+            return songMap.get(song as string) || song;
+          });
+
+          return {
+            ...playbook,
+            songs: songObjects
+          };
+        });
+      }
     }
 
     return playbooksList.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
@@ -136,19 +168,19 @@ export const getPlaybooks = async (userId: string): Promise<Playbook[]> => {
 export const getPlaybookById = async (playbookId: string): Promise<Playbook | null> => {
   try {
     const isOnline = await isNetworkAvailable();
-    const localKey = `${STORAGE_KEY_PREFIX}${playbookId}`;
-    
+    const localKey = `${PLAYBOOK_STORAGE_KEY_PREFIX}${playbookId}`;
+
     if (isOnline) {
       // Online: Fetch from server
       const response = await fetch(`${API_URL}/${playbookId}`);
       if (!response.ok) return null;
-      
+
       const serverPlaybook = await response.json();
       await AsyncStorage.setItem(
         localKey,
         JSON.stringify({ ...serverPlaybook, synced: true })
       );
-      
+
       return serverPlaybook;
     } else {
       // Offline: Get from local storage
@@ -164,8 +196,8 @@ export const getPlaybookById = async (playbookId: string): Promise<Playbook | nu
 export const updatePlaybook = async (playbookId: string, updates: Partial<Playbook>): Promise<Playbook> => {
   try {
     const isOnline = await isNetworkAvailable();
-    const localKey = `${STORAGE_KEY_PREFIX}${playbookId}`;
-    
+    const localKey = `${PLAYBOOK_STORAGE_KEY_PREFIX}${playbookId}`;
+
     if (isOnline) {
       // Online: Update on server
       const response = await fetch(`${API_URL}/${playbookId}`, {
@@ -175,23 +207,60 @@ export const updatePlaybook = async (playbookId: string, updates: Partial<Playbo
         },
         body: JSON.stringify(updates)
       });
-      
+
       const updatedPlaybook = await response.json();
       await AsyncStorage.setItem(
         localKey,
         JSON.stringify({ ...updatedPlaybook, synced: true })
       );
-      
+
       return updatedPlaybook;
     } else {
       // Offline: Update local storage
       const playbookStr = await AsyncStorage.getItem(localKey);
       if (!playbookStr) throw new Error('Playbook not found');
-      
+
       const existingPlaybook = JSON.parse(playbookStr);
       const updatedPlaybook = { ...existingPlaybook, ...updates, synced: false };
+
+      // If songs array is being updated, ensure we're not including deleted songs
+      if (updates.songs) {
+        console.log('updating songs', updates.songs);
+        
+        // Fetch all songs from storage
+        const songKeys = await AsyncStorage.getAllKeys();
+        const songKeysFiltered = songKeys.filter(k => k.startsWith(SONG_STORAGE_KEY_PREFIX));
+        const songs = await Promise.all(
+          songKeysFiltered.map(async (key) => {
+            const songStr = await AsyncStorage.getItem(key);
+            if (!songStr) return null;
+            const song = JSON.parse(songStr);
+            return song.markedForDeletion ? null : song;
+          })
+        );
+
+        // Create a map of song IDs to song objects
+        const songMap = new Map(
+          songs
+            .filter((song): song is Song => song !== null)
+            .map(song => [song._id, song])
+        );
+
+        // Convert all songs to song objects
+        updatedPlaybook.songs = updates.songs.map(song => {
+          // If it's already a song object, return it
+          if (typeof song === 'object' && song !== null) {
+            return song;
+          }
+          // If it's a string (ID), look up the song object
+          return songMap.get(song as string) || song;
+        });
+
+        console.log('updatedPlaybook', updatedPlaybook);
+      }
+
       await AsyncStorage.setItem(localKey, JSON.stringify(updatedPlaybook));
-      
+
       return updatedPlaybook;
     }
   } catch (error) {
@@ -203,8 +272,8 @@ export const updatePlaybook = async (playbookId: string, updates: Partial<Playbo
 export const deletePlaybook = async (playbookId: string): Promise<void> => {
   try {
     const isOnline = await isNetworkAvailable();
-    const localKey = `${STORAGE_KEY_PREFIX}${playbookId}`;
-    
+    const localKey = `${PLAYBOOK_STORAGE_KEY_PREFIX}${playbookId}`;
+
     if (isOnline) {
       // Online: Delete from server
       await fetch(`${API_URL}/${playbookId}`, {
@@ -235,7 +304,7 @@ export const syncOfflinePlaybooks = async (): Promise<void> => {
 
   console.log('Starting sync of offline playbooks...');
   const keys = await AsyncStorage.getAllKeys();
-  const playbookKeys = keys.filter(k => k.startsWith(STORAGE_KEY_PREFIX));
+  const playbookKeys = keys.filter(k => k.startsWith(PLAYBOOK_STORAGE_KEY_PREFIX));
 
   for (const key of playbookKeys) {
     const playbookStr = await AsyncStorage.getItem(key);
@@ -255,36 +324,36 @@ export const syncOfflinePlaybooks = async (): Promise<void> => {
         }
 
         if (!playbook.synced) {
-          console.log('Syncing offline playbook:', { 
-            id: playbook._id, 
+          console.log('Syncing offline playbook:', {
+            id: playbook._id,
             name: playbook.name,
             isNew: !playbook._id || playbook._id.startsWith('local_')
           });
-          
+
           if (!playbook._id || playbook._id.startsWith('local_')) {
             // New playbook that needs to be created
             const { synced, _id, markedForDeletion, ...playbookData } = playbook;
             const syncedPlaybook = await createPlaybook(playbookData);
-            
+
             // Remove old version and store new one
             await AsyncStorage.removeItem(key);
             await AsyncStorage.setItem(
-              `${STORAGE_KEY_PREFIX}${syncedPlaybook._id}`,
+              `${PLAYBOOK_STORAGE_KEY_PREFIX}${syncedPlaybook._id}`,
               JSON.stringify({ ...syncedPlaybook, synced: true })
             );
-            
+
             console.log('Successfully synced new playbook:', syncedPlaybook._id);
           } else {
             // Existing playbook that needs to be updated
             const { synced, _id, markedForDeletion, ...playbookData } = playbook;
             const syncedPlaybook = await updatePlaybook(_id, playbookData);
-            
+
             // Update local storage with synced version
             await AsyncStorage.setItem(
               key,
               JSON.stringify({ ...syncedPlaybook, synced: true })
             );
-            
+
             console.log('Successfully synced existing playbook:', _id);
           }
         }

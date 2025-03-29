@@ -14,6 +14,8 @@ import { KEY_OPTIONS } from "@/constants/chords"
 import ChordProgressionPreview from "@/components/ChordProgressionPreview"
 import { useSong } from "@/providers/song-provider"
 import { usePlaybook } from "@/providers/PlaybookProvider"
+import { useAuth } from "@/providers/auth-provider"
+import * as songService from "@/services/songService"
 
 export default function AddSongScreen() {
   const router = useRouter()
@@ -22,6 +24,7 @@ export default function AddSongScreen() {
   const insets = useSafeAreaInsets()
   const { sections, deleteSection, clearSections } = useSong()
   const { addSongToPlaybook } = usePlaybook()
+  const { dbUser } = useAuth()
 
   const [songTitle, setSongTitle] = useState("")
   const [songKey, setSongKey] = useState("C")
@@ -60,15 +63,24 @@ export default function AddSongScreen() {
       return
     }
 
+    if (!dbUser?.userId) {
+      Alert.alert("Error", "User not found")
+      return
+    }
+
     try {
-      const newSong = {
-        id: `song-${Date.now()}`,
+      // Create the song first
+      const newSong = await songService.createSong({
+        userId: dbUser.userId,
+        playbookId: id,
         title: songTitle,
         key: songKey,
         sections
-      }
+      });
 
-      await addSongToPlaybook(id, newSong)
+      // Add the song to the playbook
+      await addSongToPlaybook(id, newSong._id);
+      
       clearSections()
       router.back()
     } catch (error) {
