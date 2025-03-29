@@ -10,7 +10,7 @@ export const startSyncService = () => {
       try {
         // Sync both entities
         await Promise.all([
-          syncOfflineSongs(),
+          // syncOfflineSongs(),
           syncOfflinePlaybooks()
         ]);
         console.log('Sync completed successfully');

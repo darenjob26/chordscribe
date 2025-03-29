@@ -31,7 +31,7 @@ export const PlaybookProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [currentPlaybook, setCurrentPlaybook] = useState<Playbook | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useAuth();
+  const { dbUser } = useAuth();
 
   const fetchPlaybooks = async () => {
     try {
@@ -41,21 +41,21 @@ export const PlaybookProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setPlaybooks(fetchedPlaybooks);
 
       // If no playbooks exist, create a default one
-      if (fetchedPlaybooks.length === 0) {
-        console.log('Creating default playbook');
-        const defaultPlaybookInput: CreatePlaybookInput = {
-          userId: user?.uid || '',
-          name: 'My Songs',
-          description: 'Your default song collection',
-          songs: []
-        };
-        const defaultPlaybook = await playbookService.createPlaybook(defaultPlaybookInput);
-        setPlaybooks([defaultPlaybook]);
-        setCurrentPlaybook(defaultPlaybook);
-      } else if (!currentPlaybook) {
-        // If we have playbooks but no current selection, select the first one
-        setCurrentPlaybook(fetchedPlaybooks[0]);
-      }
+      // if (fetchedPlaybooks.length === 0) {
+      //   console.log('Creating default playbook');
+      //   const defaultPlaybookInput: CreatePlaybookInput = {
+      //     userId: dbUser?.userId || null,
+      //     name: 'My Songs',
+      //     description: 'Your default song collection',
+      //     songs: []
+      //   };
+      //   const defaultPlaybook = await playbookService.createPlaybook(defaultPlaybookInput);
+      //   setPlaybooks([defaultPlaybook]);
+      //   setCurrentPlaybook(defaultPlaybook);
+      // } else if (!currentPlaybook) {
+      //   // If we have playbooks but no current selection, select the first one
+      //   setCurrentPlaybook(fetchedPlaybooks[0]);
+      // }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch playbooks');
     } finally {
@@ -73,7 +73,7 @@ export const PlaybookProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       setError(null);
       const newPlaybookInput: CreatePlaybookInput = {
-        userId: user?.uid || '',
+        userId: dbUser?.userId || '',
         name,
         description,
         songs: []
@@ -161,6 +161,7 @@ export const PlaybookProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
+
   const value = {
     playbooks,
     currentPlaybook,
@@ -171,7 +172,7 @@ export const PlaybookProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     deletePlaybook,
     setCurrentPlaybook,
     addSongToPlaybook,
-    removeSongFromPlaybook
+    removeSongFromPlaybook,
   };
 
   return (

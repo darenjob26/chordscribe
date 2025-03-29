@@ -9,8 +9,8 @@ export interface Song {
 }
 
 export interface Playbook {
-  _id: string
-  userId: string
+  _id?: string
+  userId: string | null
   name: string
   description?: string
   createdAt: string
@@ -19,14 +19,13 @@ export interface Playbook {
 }
 
 export interface CreatePlaybookInput {
-  userId: string
+  userId: string | null
   name: string
   description?: string
   songs: string[]
 }
 
 export interface UpdatePlaybookInput {
-  userId: string
   name?: string
   description?: string
   songs?: string[]

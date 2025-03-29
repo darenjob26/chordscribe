@@ -67,7 +67,7 @@ export default function PlaybookScreen() {
           )}
         </View>
         <Text className="text-md" style={{ color: colors.muted }}>
-          {item.songs.length} {item.songs.length === 1 ? "song" : "songs"}
+          {/* {item.songs.length} {item.songs.length === 1 ? "song" : "songs"} */}
         </Text>
       </View>
       <Feather name="chevron-right" size={20} color={colors.muted} />
