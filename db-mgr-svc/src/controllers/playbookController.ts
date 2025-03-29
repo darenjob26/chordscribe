@@ -13,7 +13,13 @@ export const createPlaybook = async (req: Request, res: Response) => {
 
 export const getPlaybooks = async (req: Request, res: Response) => {
   try {
-    const playbooks = await Playbook.find().populate('songs');
+    const { userId } = req.query;
+    
+    if (!userId) {
+      return res.status(400).json({ message: 'userId is required' });
+    }
+
+    const playbooks = await Playbook.find({ userId }).populate('songs');
     res.json(playbooks);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching playbooks', error });

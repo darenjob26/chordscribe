@@ -48,7 +48,7 @@ export const PlaybookProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       isRefreshingRef.current = true;
       console.log('Fetching playbooks...');
       setError(null);
-      const fetchedPlaybooks = await playbookService.getPlaybooks();
+      const fetchedPlaybooks = await playbookService.getPlaybooks(dbUser.userId);
       console.log('Fetched playbooks:', fetchedPlaybooks.length);
       setPlaybooks(fetchedPlaybooks);
 
@@ -56,7 +56,7 @@ export const PlaybookProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (fetchedPlaybooks.length === 0) {
         console.log('Creating default playbook');
         const defaultPlaybookInput: CreatePlaybookInput = {
-          userId: dbUser?.userId || null,
+          userId: dbUser.userId,
           name: 'My Songs',
           description: 'Your default song collection',
           songs: []

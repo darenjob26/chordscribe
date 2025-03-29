@@ -16,7 +16,6 @@ export const deleteAllPlaybooks = async () => {
 
 export const createPlaybook = async (playbook: CreatePlaybookInput): Promise<Playbook> => {
   try {
-    const localId = Date.now().toString();
     const isOnline = await isNetworkAvailable();
 
     if (isOnline) {
@@ -33,16 +32,19 @@ export const createPlaybook = async (playbook: CreatePlaybookInput): Promise<Pla
       });
       
       const serverPlaybook = await response.json();
+      // Use server's _id for storage
       await AsyncStorage.setItem(
-        `${STORAGE_KEY_PREFIX}${localId}`,
-        JSON.stringify(serverPlaybook)
+        `${STORAGE_KEY_PREFIX}${serverPlaybook._id}`,
+        JSON.stringify({ ...serverPlaybook, synced: true })
       );
       
       return serverPlaybook;
     } else {
       // Offline: Store locally
+      const localId = Date.now().toString();
       const localPlaybook = { 
         ...playbook, 
+        _id: 'local_'+localId, // Add local _id for offline tracking
         synced: false,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
@@ -59,15 +61,22 @@ export const createPlaybook = async (playbook: CreatePlaybookInput): Promise<Pla
   }
 };
 
-export const getPlaybooks = async (): Promise<Playbook[]> => {
+export const getPlaybooks = async (userId: string): Promise<Playbook[]> => {
   try {
     console.log('get playbooks')
     const isOnline = await isNetworkAvailable();
 
+    let playbooksList: Playbook[] = [];
+
     if (isOnline) {
       // Online: Fetch from server
-      const response = await fetch(API_URL);
+      const response = await fetch(`${API_URL}?userId=${userId}`);
       const serverPlaybooks = await response.json();
+      
+      // Clear existing playbooks from local storage
+      const keys = await AsyncStorage.getAllKeys();
+      const playbookKeys = keys.filter(k => k.startsWith(STORAGE_KEY_PREFIX));
+      await AsyncStorage.multiRemove(playbookKeys);
       
       // Update local storage with server data
       for (const playbook of serverPlaybooks) {
@@ -77,11 +86,10 @@ export const getPlaybooks = async (): Promise<Playbook[]> => {
         );
       }
       
-      return serverPlaybooks;
+      playbooksList = serverPlaybooks;
     } else {
       // Offline: Get from local storage
       console.log('get offline')
-      // deleteAllPlaybooks() // - dont delete this
       const keys = await AsyncStorage.getAllKeys();
       const playbookKeys = keys.filter(k => k.startsWith(STORAGE_KEY_PREFIX));
       const playbooks = await Promise.all(
@@ -90,7 +98,9 @@ export const getPlaybooks = async (): Promise<Playbook[]> => {
           return playbookStr ? JSON.parse(playbookStr) : null;
         })
       );
-      const filteredPlaybooks = playbooks.filter((playbook): playbook is Playbook => playbook !== null);
+      const filteredPlaybooks = playbooks
+        .filter((playbook): playbook is Playbook => playbook !== null)
+        .filter(playbook => playbook.userId === userId);
 
       // Only create default playbook if there are no playbooks at all
       if (filteredPlaybooks.length === 0) {
@@ -100,7 +110,7 @@ export const getPlaybooks = async (): Promise<Playbook[]> => {
           songs: [],
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-          userId: null,
+          userId: userId,
           synced: false
         };
         const localId = Date.now().toString();
@@ -108,11 +118,14 @@ export const getPlaybooks = async (): Promise<Playbook[]> => {
           `${STORAGE_KEY_PREFIX}${localId}`,
           JSON.stringify(defaultPlaybook)
         );
-        return [defaultPlaybook];
+
+        playbooksList = [defaultPlaybook];
       }
 
-      return filteredPlaybooks;
+      playbooksList = filteredPlaybooks;
     }
+
+    return playbooksList.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   } catch (error) {
     console.error('Error fetching playbooks:', error);
     throw error;
@@ -210,8 +223,10 @@ export const syncOfflinePlaybooks = async (): Promise<void> => {
   const isOnline = await isNetworkAvailable();
   if (!isOnline) return;
 
+  console.log('Starting sync of offline playbooks...');
   const keys = await AsyncStorage.getAllKeys();
   const playbookKeys = keys.filter(k => k.startsWith(STORAGE_KEY_PREFIX));
+
 
   for (const key of playbookKeys) {
     const playbookStr = await AsyncStorage.getItem(key);
@@ -219,18 +234,37 @@ export const syncOfflinePlaybooks = async (): Promise<void> => {
       const playbook = JSON.parse(playbookStr);
       try {
         if (!playbook.synced) {
-          console.log('syncing offline playbook', playbook._id, playbook.name);
+          console.log('Syncing offline playbook:', { 
+            id: playbook._id, 
+            name: playbook.name,
+            isNew: !playbook._id || playbook._id.startsWith('local_')
+          });
           
-          if (!playbook._id) {
+          if (!playbook._id || playbook._id.startsWith('local_')) {
             // New playbook that needs to be created
-            const { synced, ...playbookData } = playbook;
+            const { synced, _id, ...playbookData } = playbook;
             const syncedPlaybook = await createPlaybook(playbookData);
-            await AsyncStorage.setItem(key, JSON.stringify({ ...syncedPlaybook, synced: true }));
+            
+            // Remove old version and store new one
+            await AsyncStorage.removeItem(key);
+            await AsyncStorage.setItem(
+              `${STORAGE_KEY_PREFIX}${syncedPlaybook._id}`,
+              JSON.stringify({ ...syncedPlaybook, synced: true })
+            );
+            
+            console.log('Successfully synced new playbook:', syncedPlaybook._id);
           } else {
             // Existing playbook that needs to be updated
             const { synced, _id, ...playbookData } = playbook;
             const syncedPlaybook = await updatePlaybook(_id, playbookData);
-            await AsyncStorage.setItem(key, JSON.stringify({ ...syncedPlaybook, synced: true }));
+            
+            // Update local storage with synced version
+            await AsyncStorage.setItem(
+              key,
+              JSON.stringify({ ...syncedPlaybook, synced: true })
+            );
+            
+            console.log('Successfully synced existing playbook:', _id);
           }
         }
       } catch (error) {
@@ -238,4 +272,5 @@ export const syncOfflinePlaybooks = async (): Promise<void> => {
       }
     }
   }
+  console.log('Finished syncing offline playbooks');
 }; 
