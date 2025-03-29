@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/providers/auth-provider";
-import { Redirect, useRouter } from "expo-router";
+import { Redirect, useRouter,  } from "expo-router";
 import { useEffect } from "react";
 import { Text, View } from "react-native";
 

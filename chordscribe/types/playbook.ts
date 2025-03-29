@@ -17,6 +17,7 @@ export interface Playbook {
   updatedAt: string
   songs: string[]
   synced?: boolean
+  markedForDeletion?: boolean
 }
 
 export interface CreatePlaybookInput {

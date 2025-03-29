@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { useTheme } from "@/providers/theme-provider";
 import ThemedInput from "@/components/ui/Input";
 import ThemedButton from "@/components/ui/TButton";
@@ -24,7 +25,7 @@ export default function PlaybookSongsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const { playbooks, deleteSongFromPlaybook } = usePlaybook();
+  const { playbooks, removeSongFromPlaybook, updatePlaybook, deletePlaybook } = usePlaybook();
 
   const playbook = playbooks.find(p => p._id === id);
   const headerHeight = insets.top + 30;
@@ -34,6 +35,54 @@ export default function PlaybookSongsScreen() {
       pathname: '/(tabs)/playbook/[id]/add-song',
       params: { id }
     });
+  };
+
+  const handleEditPlaybook = () => {
+    if (!playbook || playbook.name === 'My Songs') return;
+    
+    Alert.prompt(
+      "Edit Playbook",
+      "Enter new name for the playbook",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Save",
+          onPress: (newName?: string) => {
+            if (newName && newName.trim()) {
+              updatePlaybook(id, { name: newName.trim() });
+            }
+          }
+        }
+      ],
+      "plain-text",
+      playbook.name
+    );
+  };
+
+  const handleDeletePlaybook = () => {
+    if (!playbook || playbook.name === 'My Songs') return;
+
+    Alert.alert(
+      "Delete Playbook",
+      "Are you sure you want to delete this playbook? This will delete all songs under this playbook.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            deletePlaybook(id);
+            router.back();
+          }
+        }
+      ]
+    );
   };
 
   const handleDeleteSong = (songId: string) => {
@@ -48,7 +97,7 @@ export default function PlaybookSongsScreen() {
         {
           text: "Delete",
           style: "destructive",
-          onPress: () => deleteSongFromPlaybook(id, songId)
+          onPress: () => removeSongFromPlaybook(id, songId)
         }
       ]
     );
@@ -58,7 +107,10 @@ export default function PlaybookSongsScreen() {
     <TouchableOpacity
       className="flex-row items-center p-4 rounded-lg border mb-3"
       style={{ backgroundColor: colors.card, borderColor: colors.border }}
-      onPress={() => router.push(`/playbook/${id}/song/${item.id}` as any)}
+      onPress={() => router.push({
+        pathname: '/(tabs)/playbook/[id]/song/[songId]',
+        params: { id, songId: item._id }
+      })}
     >
       <View
         className="w-10 h-10 rounded-lg justify-center items-center mr-3 bg-gray-500"
@@ -78,7 +130,7 @@ export default function PlaybookSongsScreen() {
         </Text>
       </View>
       <TouchableOpacity
-        onPress={() => handleDeleteSong(item.id)}
+        onPress={() => handleDeleteSong(item._id)}
         className="p-2"
       >
         <Feather name="trash-2" size={20} color={colors.error} />
@@ -107,10 +159,28 @@ export default function PlaybookSongsScreen() {
             {playbook.name}
           </Text>
         </View>
-        <ThemedButton
-          title="Add Song"
-          onPress={handleAddSong}
-        />
+        <View className="flex-row items-center gap-2">
+          {playbook.name !== 'My Songs' && (
+            <>
+              <TouchableOpacity
+                onPress={handleEditPlaybook}
+                className="p-2"
+              >
+                <Feather name="edit-2" size={20} color={colors.text} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleDeletePlaybook}
+                className="p-2"
+              >
+                <Feather name="trash-2" size={20} color={colors.error} />
+              </TouchableOpacity>
+            </>
+          )}
+          <ThemedButton
+            title="Add Song"
+            onPress={handleAddSong}
+          />
+        </View>
       </View>
 
       {playbook.songs.length === 0 ? (
@@ -122,7 +192,7 @@ export default function PlaybookSongsScreen() {
         <FlatList
           data={playbook.songs}
           renderItem={renderSongItem}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item._id}
           className="pb-4"
           showsVerticalScrollIndicator={false}
         />

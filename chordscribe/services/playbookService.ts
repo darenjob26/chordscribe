@@ -100,7 +100,8 @@ export const getPlaybooks = async (userId: string): Promise<Playbook[]> => {
       );
       const filteredPlaybooks = playbooks
         .filter((playbook): playbook is Playbook => playbook !== null)
-        .filter(playbook => playbook.userId === userId);
+        .filter(playbook => playbook.userId === userId)
+        .filter(playbook => !playbook.markedForDeletion);
 
       // Only create default playbook if there are no playbooks at all
       if (filteredPlaybooks.length === 0) {
@@ -209,10 +210,19 @@ export const deletePlaybook = async (playbookId: string): Promise<void> => {
       await fetch(`${API_URL}/${playbookId}`, {
         method: 'DELETE'
       });
+      // Delete from local storage after successful server deletion
+      await AsyncStorage.removeItem(localKey);
+    } else {
+      // Offline: Mark for deletion in local storage
+      const playbookStr = await AsyncStorage.getItem(localKey);
+      if (playbookStr) {
+        const playbook = JSON.parse(playbookStr);
+        await AsyncStorage.setItem(
+          localKey,
+          JSON.stringify({ ...playbook, markedForDeletion: true })
+        );
+      }
     }
-    
-    // Always delete from local storage
-    await AsyncStorage.removeItem(localKey);
   } catch (error) {
     console.error('Error deleting playbook:', error);
     throw error;
@@ -227,12 +237,23 @@ export const syncOfflinePlaybooks = async (): Promise<void> => {
   const keys = await AsyncStorage.getAllKeys();
   const playbookKeys = keys.filter(k => k.startsWith(STORAGE_KEY_PREFIX));
 
-
   for (const key of playbookKeys) {
     const playbookStr = await AsyncStorage.getItem(key);
     if (playbookStr) {
       const playbook = JSON.parse(playbookStr);
       try {
+        // Handle playbooks marked for deletion
+        if (playbook.markedForDeletion) {
+          console.log('Deleting playbook marked for deletion:', playbook._id);
+          if (playbook._id) {
+            await fetch(`${API_URL}/${playbook._id}`, {
+              method: 'DELETE'
+            });
+          }
+          await AsyncStorage.removeItem(key);
+          continue;
+        }
+
         if (!playbook.synced) {
           console.log('Syncing offline playbook:', { 
             id: playbook._id, 
@@ -242,7 +263,7 @@ export const syncOfflinePlaybooks = async (): Promise<void> => {
           
           if (!playbook._id || playbook._id.startsWith('local_')) {
             // New playbook that needs to be created
-            const { synced, _id, ...playbookData } = playbook;
+            const { synced, _id, markedForDeletion, ...playbookData } = playbook;
             const syncedPlaybook = await createPlaybook(playbookData);
             
             // Remove old version and store new one
@@ -255,7 +276,7 @@ export const syncOfflinePlaybooks = async (): Promise<void> => {
             console.log('Successfully synced new playbook:', syncedPlaybook._id);
           } else {
             // Existing playbook that needs to be updated
-            const { synced, _id, ...playbookData } = playbook;
+            const { synced, _id, markedForDeletion, ...playbookData } = playbook;
             const syncedPlaybook = await updatePlaybook(_id, playbookData);
             
             // Update local storage with synced version
