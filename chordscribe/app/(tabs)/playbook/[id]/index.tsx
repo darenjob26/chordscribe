@@ -195,7 +195,7 @@ export default function PlaybookSongsScreen() {
         </View>
       ) : (
         <FlatList
-          data={playbook.songs}
+          data={playbook.songs as Song[]}
           renderItem={renderSongItem}
           keyExtractor={(item) => item._id}
           className="pb-4"

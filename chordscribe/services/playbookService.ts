@@ -170,23 +170,57 @@ export const getPlaybookById = async (playbookId: string): Promise<Playbook | nu
     const isOnline = await isNetworkAvailable();
     const localKey = `${PLAYBOOK_STORAGE_KEY_PREFIX}${playbookId}`;
 
+    let playbook: Playbook | null = null;
+
     if (isOnline) {
       // Online: Fetch from server
       const response = await fetch(`${API_URL}/${playbookId}`);
       if (!response.ok) return null;
 
-      const serverPlaybook = await response.json();
+      playbook = await response.json();
       await AsyncStorage.setItem(
         localKey,
-        JSON.stringify({ ...serverPlaybook, synced: true })
+        JSON.stringify({ ...playbook, synced: true })
       );
-
-      return serverPlaybook;
     } else {
       // Offline: Get from local storage
       const playbookStr = await AsyncStorage.getItem(localKey);
-      return playbookStr ? JSON.parse(playbookStr) : null;
+      if (!playbookStr) return null;
+      playbook = JSON.parse(playbookStr);
     }
+
+    if (!playbook) return null;
+
+    // Fetch all songs from storage
+    const songKeys = await AsyncStorage.getAllKeys();
+    const songKeysFiltered = songKeys.filter(k => k.startsWith(SONG_STORAGE_KEY_PREFIX));
+    const songs = await Promise.all(
+      songKeysFiltered.map(async (key) => {
+        const songStr = await AsyncStorage.getItem(key);
+        if (!songStr) return null;
+        const song = JSON.parse(songStr);
+        return song.markedForDeletion ? null : song;
+      })
+    );
+
+    // Create a map of song IDs to song objects
+    const songMap = new Map(
+      songs
+        .filter((song): song is Song => song !== null)
+        .map(song => [song._id, song])
+    );
+
+    // Convert all songs to song objects
+    playbook.songs = playbook.songs.map(song => {
+      // If it's already a song object, return it
+      if (typeof song === 'object' && song !== null) {
+        return song;
+      }
+      // If it's a string (ID), look up the song object
+      return songMap.get(song as string) || song;
+    });
+
+    return playbook;
   } catch (error) {
     console.error('Error fetching playbook:', error);
     throw error;
