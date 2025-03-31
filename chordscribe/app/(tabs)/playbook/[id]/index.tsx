@@ -17,7 +17,6 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { usePlaybook } from "@/providers/PlaybookProvider";
 import { Playbook, Song } from "@/types/playbook";
 
 export default function PlaybookSongsScreen() {
@@ -25,7 +24,7 @@ export default function PlaybookSongsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const { playbooks, removeSongFromPlaybook, updatePlaybook, deletePlaybook } = usePlaybook();
+  const playbooks: Playbook[] = []
 
   const playbook = playbooks.find(p => p._id === id);
   const headerHeight = insets.top + 30;
@@ -51,9 +50,7 @@ export default function PlaybookSongsScreen() {
         {
           text: "Save",
           onPress: (newName?: string) => {
-            if (newName && newName.trim()) {
-              updatePlaybook(id, { name: newName.trim() });
-            }
+
           }
         }
       ],
@@ -77,7 +74,6 @@ export default function PlaybookSongsScreen() {
           text: "Delete",
           style: "destructive",
           onPress: () => {
-            deletePlaybook(id);
             router.back();
           }
         }
@@ -97,7 +93,9 @@ export default function PlaybookSongsScreen() {
         {
           text: "Delete",
           style: "destructive",
-          onPress: () => removeSongFromPlaybook(id, songId)
+            onPress: () => {
+              // TODO: Implement delete song
+            }
         }
       ]
     );

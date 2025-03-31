@@ -4,7 +4,7 @@ import {
   getPlaybooks,
   getPlaybookById,
   updatePlaybook,
-  deletePlaybook
+  deletePlaybook,
 } from '../controllers/playbookController';
 
 const router = express.Router();

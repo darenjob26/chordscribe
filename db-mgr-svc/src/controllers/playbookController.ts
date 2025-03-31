@@ -13,13 +13,28 @@ export const createPlaybook = async (req: Request, res: Response) => {
 
 export const getPlaybooks = async (req: Request, res: Response) => {
   try {
-    const { userId } = req.query;
-    
-    if (!userId) {
-      return res.status(400).json({ message: 'userId is required' });
-    }
-
-    const playbooks = await Playbook.find({ userId }).populate('songs');
+    const playbooks = [
+      {
+        _id: '1',
+        userId: '1',
+        name: 'Playbook 1',
+        description: 'Playbook 1 description',
+        songs: ['1', '2', '3'],
+        syncStatus: 'synced',
+        createdAt: '2021-01-01',
+        updatedAt: '2021-01-01',
+      },
+      {
+        _id: '2',
+        userId: '1',
+        name: 'Playbook 2',
+        description: 'Playbook 2 description',
+        songs: ['1', '2', '3'],
+        syncStatus: 'synced',
+        createdAt: '2021-01-01',
+        updatedAt: '2021-01-01',
+      }
+    ]
     res.json(playbooks);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching playbooks', error });
@@ -45,7 +60,7 @@ export const updatePlaybook = async (req: Request, res: Response) => {
       req.body,
       { new: true, runValidators: true }
     ).populate('songs');
-    
+
     if (!playbook) {
       return res.status(404).json({ message: 'Playbook not found' });
     }

@@ -13,7 +13,6 @@ import { Song, Section, Chord } from "@/types/chord"
 import { KEY_OPTIONS } from "@/constants/chords"
 import ChordProgressionPreview from "@/components/ChordProgressionPreview"
 import { useSong } from "@/providers/song-provider"
-import { usePlaybook } from "@/providers/PlaybookProvider"
 
 export default function AddSongScreen() {
   const router = useRouter()
@@ -21,7 +20,6 @@ export default function AddSongScreen() {
   const { colors } = useTheme()
   const insets = useSafeAreaInsets()
   const { sections, deleteSection, clearSections } = useSong()
-  const { addSongToPlaybook } = usePlaybook()
 
   const [songTitle, setSongTitle] = useState("")
   const [songKey, setSongKey] = useState("C")
@@ -68,7 +66,6 @@ export default function AddSongScreen() {
         sections
       }
 
-      await addSongToPlaybook(id, newSong)
       clearSections()
       router.back()
     } catch (error) {

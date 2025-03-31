@@ -7,7 +7,6 @@ import { Feather } from "@expo/vector-icons"
 import { useTheme } from "@/providers/theme-provider"
 import ThemedButton from "@/components/ui/TButton"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { usePlaybook } from "@/providers/PlaybookProvider"
 import ChordProgressionPreview from "@/components/ChordProgressionPreview"
 
 // Types
@@ -43,7 +42,6 @@ export default function SongDetailScreen() {
   const { id, songId } = useLocalSearchParams<{ id: string; songId: string }>()
   const { colors } = useTheme()
   const insets = useSafeAreaInsets()
-  const { getPlaybook } = usePlaybook()
 
   const [song, setSong] = useState<Song | null>(null)
   const [playbookName, setPlaybookName] = useState("")
@@ -51,23 +49,7 @@ export default function SongDetailScreen() {
   const [isPlaying, setIsPlaying] = useState(false)
 
   useEffect(() => {
-    loadSong()
-  }, [id, songId])
-
-  const loadSong = async () => {
-    try {
-      const playbook = await getPlaybook(id)
-      if (playbook) {
-        setPlaybookName(playbook.name)
-        const foundSong = playbook.songs.find((s) => s.id === songId)
-        if (foundSong) {
-          setSong(foundSong)
-        }
-      }
-    } catch (error) {
-      console.error("Failed to load song:", error)
-    }
-  }
+  }, [id])
 
   const handleDeleteSong = () => {
     // In a real app, you would delete the song via an API

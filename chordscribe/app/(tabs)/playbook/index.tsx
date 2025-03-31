@@ -15,22 +15,39 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { usePlaybook } from "@/providers/PlaybookProvider";
 import { Playbook } from "@/types/playbook";
+import { store$ } from "@/store";
+import { observer } from "@legendapp/state/react";
 
-export default function PlaybookScreen() {
+
+
+export default observer(function PlaybookScreen() {
   const router = useRouter();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const { playbooks, createPlaybook, isLoading } = usePlaybook();
-
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newPlaybookName, setNewPlaybookName] = useState("");
 
+  const playbooks = store$.playbooks.get();
+  
   const handleAddPlaybook = async () => {
     if (newPlaybookName.trim()) {
       try {
-        await createPlaybook(newPlaybookName);
+        // Create new playbook
+        const newPlaybook: Playbook = {
+          _id: Math.random().toString(36).substring(2, 15),
+          userId: "user123", // TODO: Get actual user ID
+          name: newPlaybookName.trim(),
+          songs: [],
+          syncStatus: "pending",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+
+        // Add to store
+        store$.addPlaybook(newPlaybook);
+
+        // Reset form
         setNewPlaybookName("");
         setIsAddDialogOpen(false);
       } catch (error) {
@@ -75,14 +92,6 @@ export default function PlaybookScreen() {
   );
 
   const headerHeight = insets.top + 30;
-  
-  if (isLoading) {
-    return (
-      <View className="flex-1 justify-center items-center">
-        <Text style={{ color: colors.text }}>Loading playbooks...</Text>
-      </View>
-    );
-  }
   
   return (
     <View className="flex-1 p-4" style={{ paddingTop: headerHeight, backgroundColor: colors.background }}>
@@ -148,4 +157,4 @@ export default function PlaybookScreen() {
       )}
     </View>
   );
-}
+})

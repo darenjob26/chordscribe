@@ -53,10 +53,8 @@ export const getUserById = async (req: Request, res: Response) => {
 
 export const getUserByEmail = async (req: Request, res: Response) => {
   try {
-    console.log('Getting user by email:', req.params.email);
     const { email } = req.params;
     const user = await User.findOne({ email: email.toLowerCase() });
-    console.log('User:', user);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
