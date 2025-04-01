@@ -14,7 +14,7 @@ import { KEY_OPTIONS } from "@/constants/chords"
 import ChordProgressionPreview from "@/components/ChordProgressionPreview"
 import { useSong } from "@/providers/song-provider"
 import { observer } from "@legendapp/state/react"
-import { songStore$ } from "@/store"
+import { songStore$, userIdStore$ } from "@/services/store"
 import { Song } from "@/types/playbook"
 import { useAuth } from "@/providers/auth-provider"
 
@@ -67,7 +67,8 @@ export default observer(function AddSongScreen() {
     try {
       const newSong: Song = {
         _id: `song-${Date.now()}`,
-        userId: dbUser?.userId as string,
+        userId: userIdStore$.userId.get(),
+        playbookId: id,
         title: songTitle,
         key: songKey,
         sections,

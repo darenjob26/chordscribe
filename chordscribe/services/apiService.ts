@@ -1,23 +1,6 @@
 import { Song, Playbook } from '../types/playbook';
 
 export const apiService = {
-
-    async getSong(id: any): Promise<Song> {
-        // const response = await fetch(`/api/songs/${id}`);
-        // return response.json();
-
-        return {
-            _id: '1',
-            userId: '1',
-            title: 'Song 1',
-            key: 'C',
-            sections: [],
-            syncStatus: 'synced',
-            createdAt: '2021-01-01',
-            updatedAt: '2021-01-01',
-        };
-    },
-
     // Create a song in the server database
     async createSong(song: Song): Promise<Song> {
         const response = await fetch('/api/songs', {
@@ -62,6 +45,15 @@ export const apiService = {
 
     async listPlaybookSongs(userId: string, id: string): Promise<Song[]> {
         const response = await fetch(`http://localhost:3000/api/playbooks/${userId}/${id}/songs`);
+        return response.json();
+    },
+
+    async upsertSongs(userId: string, playbookId: string, songs: Song[]): Promise<void> {
+        const response = await fetch(`http://localhost:3000/api/playbooks/${userId}/${playbookId}/songs`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(songs),
+        });
         return response.json();
     },
 }; 

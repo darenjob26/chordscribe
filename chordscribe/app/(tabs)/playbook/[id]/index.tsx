@@ -19,7 +19,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Playbook, Song } from "@/types/playbook";
 import { observer } from "@legendapp/state/react";
-import { playBookStore$, songStore$ } from "@/store";
+import { playBookStore$, songStore$ } from "@/services/store";
 
 export default observer(function PlaybookSongsScreen() {
   const router = useRouter();

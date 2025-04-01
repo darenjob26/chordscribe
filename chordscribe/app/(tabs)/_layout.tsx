@@ -2,7 +2,7 @@ import { Stack, Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/providers/theme-provider";
 import { useEffect } from "react";
-import { userIdStore$ } from "@/store";
+import { userIdStore$ } from "@/services/store";
 import { useAuth } from "@/providers/auth-provider";
 import { observer } from "@legendapp/state/react";
 

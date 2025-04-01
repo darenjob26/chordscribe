@@ -5,6 +5,7 @@ type SyncStatus = 'synced' | 'pending' | 'error';
 export interface Song {
   _id: string
   userId: string
+  playbookId: string
   title: string
   key: string
   sections: Section[]

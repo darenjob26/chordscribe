@@ -16,7 +16,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Playbook } from "@/types/playbook";
-import { playBookStore$ } from "@/store";
+import { playBookStore$, userIdStore$ } from "@/services/store";
 import { observer } from "@legendapp/state/react";
 import { useAuth } from "@/providers/auth-provider";
 
@@ -36,7 +36,7 @@ export default observer(function PlaybookScreen() {
         // Create new playbook
         const newPlaybook: Playbook = {
           _id: Math.random().toString(36).substring(2, 15),
-          userId: dbUser?.userId ?? "", // TODO: Get actual user ID
+          userId: userIdStore$.userId.get(),
           name: newPlaybookName.trim(),
           songs: [],
           syncStatus: "pending",
