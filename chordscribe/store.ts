@@ -1,46 +1,79 @@
-import { observable, computed } from '@legendapp/state';
-import { Song, Playbook, PlaybookOperation } from './types/playbook';
+import { observable, computed, ObservablePrimitive } from '@legendapp/state';
+import { Song, Playbook } from './types/playbook';
 import { apiService } from './services/apiService';
 import { syncedCrud } from '@legendapp/state/sync-plugins/crud';
 import { configureSynced, synced, SyncedGetParams } from '@legendapp/state/sync';
 import { ObservablePersistLocalStorage } from '@legendapp/state/persist-plugins/local-storage';
 import { syncedFetch } from '@legendapp/state/sync-plugins/fetch';
 
-// Define types
-type OperationType = 'create' | 'update' | 'delete';
-type SyncStatus = 'synced' | 'pending' | 'error';
 
-interface SyncQueueItem {
-  id: string;
-  type: 'song' | 'playbook';
-  operation: OperationType;
-  data: Song | Playbook;
-  timestamp: number;
+const playbooks = (userId: ObservablePrimitive<string>) => {
+    return synced({
+        initial: [],
+        get: async (params) =>  await apiService.listPlaybooks(userId.get()),
+        set: async ({ value }) => await apiService.upsertPlaybooks(userId.get(), value),
+        transform: {
+            save: (value: Playbook[]) => {
+                return value
+            },
+        },
+        persist: {
+            plugin: ObservablePersistLocalStorage,
+            retrySync: true,
+            name: 'playbooks',
+        },
+        retry: {
+            infinite: true
+        },
+    })
 }
 
-const playbooks = synced({
-    initial: [],
-    get: () =>  apiService.listPlaybooks(),
-    set: ({ value }) => apiService.setPlaybook(value),
-    persist: {
-        plugin: ObservablePersistLocalStorage,
-        retrySync: true,
-        name: 'playbooks',
-    },
-    retry: {
-        infinite: true
-    },
+const songs = (playbookId: ObservablePrimitive<string>) => {
+    return synced({
+        initial: [],
+        get: async () =>  await apiService.listPlaybookSongs(userIdStore$.userId.get(), playbookId.get()),
+        // set: async ({ value }) => await apiService.updatePlaybook(value),
+        persist: {
+            plugin: ObservablePersistLocalStorage,
+            retrySync: true,
+            name: `songs-${playbookId.get()}`,
+        },
+        retry: {
+            infinite: true
+        },
+    })
+}
+
+export const userIdStore$ = observable({
+    userId: '',
 })
 
-export const store$ = observable({
-    playbooks,
+export const playBookStore$ = observable({
+    playbooks: playbooks(userIdStore$.userId),
     addPlaybook: (playbook: Playbook) => {
-        const newPlaybook: PlaybookOperation = {
-            ...playbook,
-            operation: 'create',
-        }
-        store$.playbooks.set([...store$.playbooks.get(), newPlaybook]);
-    }
+        playBookStore$.playbooks.set([...playBookStore$.playbooks.get(), playbook]);
+    },
+    removePlaybook: (playbook: Playbook) => {
+        playBookStore$.playbooks.set(playBookStore$.playbooks.get().filter((p) => p._id !== playbook._id));
+    },
+    updatePlaybook: (playbook: Playbook, changes: Partial<Playbook>) => {
+        playBookStore$.playbooks.set(playBookStore$.playbooks.get().map((p) => p._id === playbook._id ? { ...p, ...changes } : p));
+    },
+    selectedPlaybook: '',
+})
+
+export const songStore$ = observable({
+    songs: songs(playBookStore$.selectedPlaybook),
+    addSong: (song: Song) => {
+        songStore$.songs.set([...songStore$.songs.get(), song]);
+    },
+    removeSong: (song: Song) => {
+        songStore$.songs.set(songStore$.songs.get().filter((s) => s._id !== song._id));
+    },
+    updateSong: (song: Song) => {
+        songStore$.songs.set(songStore$.songs.get().map((s) => s._id === song._id ? song : s));
+    },
+    selectedSong: '',
 })
 
 // // Song management with better typing and error handling

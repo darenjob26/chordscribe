@@ -9,16 +9,22 @@ import { Picker } from "@react-native-picker/picker"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import ThemedButton from "@/components/ui/TButton"
 import { router as Router } from 'expo-router'
-import { Song, Section, Chord } from "@/types/chord"
+import { Section, Chord } from "@/types/chord"
 import { KEY_OPTIONS } from "@/constants/chords"
 import ChordProgressionPreview from "@/components/ChordProgressionPreview"
 import { useSong } from "@/providers/song-provider"
+import { observer } from "@legendapp/state/react"
+import { songStore$ } from "@/store"
+import { Song } from "@/types/playbook"
+import { useAuth } from "@/providers/auth-provider"
 
-export default function AddSongScreen() {
+export default observer(function AddSongScreen() {
   const router = useRouter()
   const { id } = useLocalSearchParams<{ id: string }>()
   const { colors } = useTheme()
   const insets = useSafeAreaInsets()
+  const { dbUser } = useAuth()
+
   const { sections, deleteSection, clearSections } = useSong()
 
   const [songTitle, setSongTitle] = useState("")
@@ -59,12 +65,18 @@ export default function AddSongScreen() {
     }
 
     try {
-      const newSong = {
-        id: `song-${Date.now()}`,
+      const newSong: Song = {
+        _id: `song-${Date.now()}`,
+        userId: dbUser?.userId as string,
         title: songTitle,
         key: songKey,
-        sections
+        sections,
+        syncStatus: 'pending',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       }
+      
+      songStore$.addSong(newSong)
 
       clearSections()
       router.back()
@@ -187,5 +199,5 @@ export default function AddSongScreen() {
       </ScrollView>
     </View>
   )
-}
+})
 

@@ -18,15 +18,19 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Playbook, Song } from "@/types/playbook";
+import { observer } from "@legendapp/state/react";
+import { playBookStore$, songStore$ } from "@/store";
 
-export default function PlaybookSongsScreen() {
+export default observer(function PlaybookSongsScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const playbooks: Playbook[] = []
 
+  const songs =  songStore$.songs.get();
+  const playbooks = playBookStore$.playbooks.get();
   const playbook = playbooks.find(p => p._id === id);
+
   const headerHeight = insets.top + 30;
 
   const handleAddSong = () => {
@@ -38,7 +42,7 @@ export default function PlaybookSongsScreen() {
 
   const handleEditPlaybook = () => {
     if (!playbook || playbook.name === 'My Songs') return;
-    
+
     Alert.prompt(
       "Edit Playbook",
       "Enter new name for the playbook",
@@ -50,7 +54,10 @@ export default function PlaybookSongsScreen() {
         {
           text: "Save",
           onPress: (newName?: string) => {
-
+            if (newName) {
+              playbook.syncStatus = 'pending';
+              playBookStore$.updatePlaybook(playbook, { name: newName, syncStatus: 'pending' });
+            }
           }
         }
       ],
@@ -74,6 +81,8 @@ export default function PlaybookSongsScreen() {
           text: "Delete",
           style: "destructive",
           onPress: () => {
+            playbook.syncStatus = 'pending';
+            playBookStore$.removePlaybook(playbook);
             router.back();
           }
         }
@@ -81,7 +90,7 @@ export default function PlaybookSongsScreen() {
     );
   };
 
-  const handleDeleteSong = (songId: string) => {
+  const handleDeleteSong = (song: Song) => {
     Alert.alert(
       "Delete Song",
       "Are you sure you want to delete this song?",
@@ -93,49 +102,51 @@ export default function PlaybookSongsScreen() {
         {
           text: "Delete",
           style: "destructive",
-            onPress: () => {
-              // TODO: Implement delete song
-            }
+          onPress: () => {
+            songStore$.removeSong(song)
+          }
         }
       ]
     );
   };
 
-  const renderSongItem = ({ item }: { item: Song }) => (
-    <TouchableOpacity
-      className="flex-row items-center p-4 rounded-lg border mb-3"
-      style={{ backgroundColor: colors.card, borderColor: colors.border }}
-      onPress={() => router.push({
-        pathname: '/(tabs)/playbook/[id]/song/[songId]',
-        params: { id, songId: item._id }
-      })}
-    >
-      <View
-        className="w-10 h-10 rounded-lg justify-center items-center mr-3 bg-gray-500"
-      >
-        <Feather name="music" size={20} color="white" />
-      </View>
-      <View className="flex-1">
-        <Text
-          className="text-lg font-semibold"
-          style={{ color: colors.text }}
-          numberOfLines={1}
-        >
-          {item.title}
-        </Text>
-        <Text className="text-md" style={{ color: colors.muted }}>
-          Key: {item.key} • {item.sections.length} {item.sections.length === 1 ? "section" : "sections"}
-        </Text>
-      </View>
+  const renderSongItem = ({ item }: { item: Song }) => {
+    return (
       <TouchableOpacity
-        onPress={() => handleDeleteSong(item._id)}
-        className="p-2"
+        className="flex-row items-center p-4 rounded-lg border mb-3"
+        style={{ backgroundColor: colors.card, borderColor: colors.border }}
+        onPress={() => router.push({
+          pathname: '/(tabs)/playbook/[id]/song/[songId]',
+          params: { id, songId: item._id }
+        })}
       >
-        <Feather name="trash-2" size={20} color={colors.error} />
+        <View
+          className="w-10 h-10 rounded-lg justify-center items-center mr-3 bg-gray-500"
+        >
+          <Feather name="music" size={20} color="white" />
+        </View>
+        <View className="flex-1">
+          <Text
+            className="text-lg font-semibold"
+            style={{ color: colors.text }}
+            numberOfLines={1}
+          >
+            {item.title}
+          </Text>
+          <Text className="text-md" style={{ color: colors.muted }}>
+            Key: {item.key} • {item.sections.length} {item.sections.length === 1 ? "section" : "sections"}
+          </Text>
+        </View>
+        <TouchableOpacity
+          onPress={() => handleDeleteSong(item)}
+          className="p-2"
+        >
+          <Feather name="trash-2" size={20} color={colors.error} />
+        </TouchableOpacity>
+        <Feather name="chevron-right" size={20} color={colors.muted} />
       </TouchableOpacity>
-      <Feather name="chevron-right" size={20} color={colors.muted} />
-    </TouchableOpacity>
-  );
+    )
+  };
 
   if (!playbook) {
     return (
@@ -181,14 +192,14 @@ export default function PlaybookSongsScreen() {
         </View>
       </View>
 
-      {playbook.songs.length === 0 ? (
+      {songs.length === 0 ? (
         <View className="items-center py-8 flex-1 justify-center">
           <Text className="text-base text-muted mb-2">No songs added yet</Text>
           <Text className="text-sm text-muted">Tap the Add Song button to create a new song</Text>
         </View>
       ) : (
         <FlatList
-          data={playbook.songs}
+          data={songs}
           renderItem={renderSongItem}
           keyExtractor={(item) => item._id}
           className="pb-4"
@@ -198,4 +209,4 @@ export default function PlaybookSongsScreen() {
 
     </View>
   );
-}
+})

@@ -5,14 +5,15 @@ import {
   getPlaybookById,
   updatePlaybook,
   deletePlaybook,
+  getPlaybookSongs,
+  upsertPlaybooks,
 } from '../controllers/playbookController';
 
 const router = express.Router();
 
-router.post('/', createPlaybook);
-router.get('/', getPlaybooks);
-router.get('/:id', getPlaybookById);
-router.put('/:id', updatePlaybook);
-router.delete('/:id', deletePlaybook);
+router.get('/:userId', getPlaybooks);
+router.get('/:userId/:id/songs', getPlaybookSongs);
+router.post('/:userId/bulk', upsertPlaybooks);
+router.get('/:userId/:id', getPlaybookById);
 
 export default router; 

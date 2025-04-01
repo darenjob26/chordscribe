@@ -5,7 +5,7 @@ import ThemedButton from "@/components/ui/TButton";
 import ThemedInput from "@/components/ui/Input";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
   FlatList,
@@ -16,10 +16,9 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Playbook } from "@/types/playbook";
-import { store$ } from "@/store";
+import { playBookStore$ } from "@/store";
 import { observer } from "@legendapp/state/react";
-
-
+import { useAuth } from "@/providers/auth-provider";
 
 export default observer(function PlaybookScreen() {
   const router = useRouter();
@@ -27,16 +26,17 @@ export default observer(function PlaybookScreen() {
   const insets = useSafeAreaInsets();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newPlaybookName, setNewPlaybookName] = useState("");
+  const { dbUser } = useAuth();
 
-  const playbooks = store$.playbooks.get();
-  
+  const playbooks = playBookStore$.playbooks.get();
+
   const handleAddPlaybook = async () => {
     if (newPlaybookName.trim()) {
       try {
         // Create new playbook
         const newPlaybook: Playbook = {
           _id: Math.random().toString(36).substring(2, 15),
-          userId: "user123", // TODO: Get actual user ID
+          userId: dbUser?.userId ?? "", // TODO: Get actual user ID
           name: newPlaybookName.trim(),
           songs: [],
           syncStatus: "pending",
@@ -45,7 +45,7 @@ export default observer(function PlaybookScreen() {
         };
 
         // Add to store
-        store$.addPlaybook(newPlaybook);
+        playBookStore$.addPlaybook(newPlaybook);
 
         // Reset form
         setNewPlaybookName("");
@@ -63,7 +63,10 @@ export default observer(function PlaybookScreen() {
       key={item._id}
       className="flex-row items-center p-4 rounded-lg border mb-3"
       style={{ backgroundColor: colors.card, borderColor: colors.border }}
-      onPress={() => router.push(`/playbook/${item._id}` as any)}
+      onPress={() => {
+        playBookStore$.selectedPlaybook.set(item._id)
+        router.push(`/playbook/${item._id}` as any)
+      }}
     >
       <View
         className="w-10 h-10 rounded-lg justify-center items-center mr-3 bg-gray-500"
@@ -92,7 +95,7 @@ export default observer(function PlaybookScreen() {
   );
 
   const headerHeight = insets.top + 30;
-  
+
   return (
     <View className="flex-1 p-4" style={{ paddingTop: headerHeight, backgroundColor: colors.background }}>
       {/* Header */}

@@ -1,6 +1,7 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface ISong extends Document {
+  _id: string;
   title: string;
   key: string;
   sections: {

@@ -23,9 +23,3 @@ export interface Playbook {
   createdAt: string
   updatedAt: string
 }
-
-type OperationType = 'create' | 'update' | 'delete';
-
-export type PlaybookOperation = Playbook & {
-  operation: OperationType
-}

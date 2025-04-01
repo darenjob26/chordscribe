@@ -2,9 +2,17 @@ import { Stack, Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/providers/theme-provider";
 import { useEffect } from "react";
-export default function FeaturesLayout() {
-  const { colors } = useTheme();
+import { userIdStore$ } from "@/store";
+import { useAuth } from "@/providers/auth-provider";
+import { observer } from "@legendapp/state/react";
 
+export default observer(function FeaturesLayout() {
+  const { colors } = useTheme();
+  const { dbUser } = useAuth();
+
+  useEffect(() => {
+    userIdStore$.userId.set(dbUser?.userId ?? '');
+  }, [dbUser]);
 
   return (
     <Tabs
@@ -39,4 +47,4 @@ export default function FeaturesLayout() {
       />
     </Tabs>
   );
-}
+})

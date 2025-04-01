@@ -5,7 +5,7 @@ export interface IPlaybook extends Document {
   description?: string;
   userId: string;
   songs: mongoose.Types.ObjectId[];
-  synced: boolean;
+  syncStatus: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -15,7 +15,7 @@ const PlaybookSchema = new Schema({
   description: { type: String },
   userId: { type: String, required: true, ref: 'User' },
   songs: [{ type: Schema.Types.ObjectId, ref: 'Song' }],
-  synced: { type: Boolean, default: false }
+  syncStatus: { type: String, default: 'pending' }  
 }, {
   timestamps: true
 });
