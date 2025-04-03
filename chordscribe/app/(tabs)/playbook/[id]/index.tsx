@@ -156,6 +156,8 @@ export default observer(function PlaybookSongsScreen() {
     );
   }
 
+  console.log('songs', songs)
+
   return (
     <View className="flex-1 p-4" style={{ paddingTop: headerHeight, backgroundColor: colors.background }}>
       {/* Header */}
