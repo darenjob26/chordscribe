@@ -1,10 +1,7 @@
 import express from 'express';
 import {
-  createPlaybook,
   getPlaybooks,
   getPlaybookById,
-  updatePlaybook,
-  deletePlaybook,
   getPlaybookSongs,
   upsertPlaybooks,
 } from '../controllers/playbookController';

@@ -1,7 +1,11 @@
 import NetInfo from '@react-native-community/netinfo';
 
 // for testing
-const forceOffline = false;
+let forceOffline = false;
+
+export const setForceOffline = (value: boolean) => {
+  forceOffline = value;
+};
 
 export const isNetworkAvailable = async (): Promise<boolean> => {
   const netState = await NetInfo.fetch();

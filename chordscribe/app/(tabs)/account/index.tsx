@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useState } from "react";
+import { isNetworkAvailable, setForceOffline } from "@/lib/network";
 
 interface SettingsSectionProps {
   title: string;
@@ -105,6 +106,7 @@ export default function AccountScreen() {
   const insets = useSafeAreaInsets();
   const [showKey, setShowKey] = useState(true);
   const [metronomeSound, setMetronomeSound] = useState(true);
+  const [isOffline, setIsOffline] = useState(true);
 
   const handleSignOut = () => {
     Alert.alert(
@@ -143,6 +145,18 @@ export default function AccountScreen() {
         },
       ],
       { cancelable: true }
+    );
+  };
+
+  const toggleOfflineMode = async () => {
+    const newOfflineState = !isOffline;
+    setIsOffline(newOfflineState);
+    setForceOffline(newOfflineState);
+    // Force the network check to return offline
+    const isAvailable = await isNetworkAvailable();
+    Alert.alert(
+      "Offline Mode",
+      `Network is ${isAvailable ? 'available' : 'unavailable'}. App will ${newOfflineState ? 'simulate' : 'use normal'} network behavior.`
     );
   };
 
@@ -210,6 +224,17 @@ export default function AccountScreen() {
               <Switch
                 value={metronomeSound}
                 onValueChange={setMetronomeSound}
+              />
+            }
+          />
+          <SettingsItem
+            icon="wifi-off"
+            label="Offline Mode"
+            showChevron={false}
+            rightElement={
+              <Switch
+                value={isOffline}
+                onValueChange={toggleOfflineMode}
               />
             }
           />
