@@ -41,6 +41,7 @@ export const getPlaybookById = async (req: Request, res: Response) => {
 
 export const upsertPlaybooks = async (req: Request, res: Response) => {
   try {
+    console.log('upsertPlaybooks', req.body);
     const playbooks: IPlaybook[] = req.body;
     const existingPlaybooks = await Playbook.find({ userId: req.params.userId });
     const existingIds = new Set(existingPlaybooks.map((pb: IPlaybook) => pb._id?.toString()));

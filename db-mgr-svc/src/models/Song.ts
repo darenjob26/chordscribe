@@ -5,12 +5,12 @@ export interface ISong extends Document {
   title: string;
   key: string;
   sections: {
-    id: string;
+    _id: string;
     name: string;
     lines: {
-      id: string;
+      _id: string;
       chords: {
-        id: string;
+        _id: string;
         root: string;
         quality: string;
         interval: string;
@@ -25,21 +25,24 @@ export interface ISong extends Document {
 }
 
 const ChordSchema = new Schema({
+  _id: { type: String, required: true },
   root: { type: String, required: true },
   quality: { type: String, required: true },
   interval: { type: String, required: true },
   timing: { type: Number },
   bass: { type: String }
-}, { _id: true });
+}, { _id: false });
 
 const LineSchema = new Schema({
+  _id: { type: String, required: true },
   chords: [ChordSchema]
-}, { _id: true });
+}, { _id: false });
 
 const SectionSchema = new Schema({
+  _id: { type: String, required: true },
   name: { type: String, required: true },
   lines: [LineSchema]
-}, { _id: true });
+}, { _id: false });
 
 const SongSchema = new Schema({
   userId: { type: String, required: true, ref: 'User' },
