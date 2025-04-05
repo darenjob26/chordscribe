@@ -25,10 +25,10 @@ export default observer(function SongDetailScreen() {
 
   useEffect(() => {
     const song = songStore$.getSongById(songId)
-    if(song) {
+    if (song) {
       setSong(song)
     }
-  }, [id])
+  }, [songId, songStore$.songs.get()])
 
   const handleDeleteSong = (song: Song) => {
     // In a real app, you would delete the song via an API
@@ -50,37 +50,31 @@ export default observer(function SongDetailScreen() {
 
   return (
     <View className="flex-1 p-4" style={{ paddingTop: headerHeight }}>
-      <View className="mb-8">
-        <View className="flex-row items-center mb-4">
-          <TouchableOpacity className="mr-4" onPress={() => router.back()}>
-            <Feather name="arrow-left" size={24} color={colors.text} />
-          </TouchableOpacity>
-          <View className="flex-1">
-            <Text className="text-2xl font-bold" style={{ color: colors.text }} numberOfLines={1}>
-              {song.title}
-            </Text>
-            <Text className="text-base" style={{ color: colors.muted }}>Key: {song.key}</Text>
-          </View>
-          <Feather name="music" size={24} color={colors.primary} />
+      <View className="flex-row items-center mb-4">
+        <TouchableOpacity className="mr-4" onPress={() => router.back()}>
+          <Feather name="arrow-left" size={24} color={colors.text} />
+        </TouchableOpacity>
+        <View className="flex-1">
+          <Text className="text-2xl font-bold" style={{ color: colors.text }} numberOfLines={1}>
+            {song.title}
+          </Text>
+          <Text className="text-base" style={{ color: colors.muted }}>Key: {song.key}</Text>
         </View>
-
-        <View className="flex-row gap-3">
-          <View className="flex-1">
-            <ThemedButton
-              variant="outline"
-              title="Edit Song"
-              onPress={() => router.push(`/playbook/${id}/edit-song/${songId}`)}
-              leftIcon={<Feather name="edit-2" size={16} color={colors.text} />}
-            />
-          </View>
-          <View className="flex-1">
-            <ThemedButton
-              variant="outline"
-              title="Delete"
-              onPress={() => setIsDeleteDialogOpen(true)}
-              leftIcon={<Feather name="trash-2" size={16} color={colors.error} />}
-            />
-          </View>
+        <View className="flex-row items-center gap-4 mr-2">
+          <TouchableOpacity
+            onPress={() => router.push(`/playbook/${id}/edit-song/${songId}`)}
+            className="p-2 rounded-full border"
+            style={{ borderColor: colors.border }}
+          >
+            <Feather name="edit-2" size={20} color={colors.text} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setIsDeleteDialogOpen(true)}
+            className="p-2 rounded-full border"
+            style={{ borderColor: colors.border }}
+          >
+            <Feather name="trash-2" size={20} color={colors.error} />
+          </TouchableOpacity>
         </View>
       </View>
 

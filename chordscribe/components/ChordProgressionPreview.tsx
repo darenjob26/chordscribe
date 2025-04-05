@@ -1,6 +1,7 @@
 import { View, Text, ScrollView } from "react-native"
 import { useTheme } from "@/providers/theme-provider"
 import { Chord, Section } from "@/types/chord"
+import { observer } from "@legendapp/state/react"
 
 interface ChordProgressionPreviewProps {
   sections: Section[]
@@ -9,7 +10,7 @@ interface ChordProgressionPreviewProps {
   onDelete?: () => void
 }
 
-export default function ChordProgressionPreview({
+export default observer(function ChordProgressionPreview({
   sections,
   showActions = false,
   onEdit,
@@ -85,4 +86,4 @@ export default function ChordProgressionPreview({
       </ScrollView>
     </View>
   )
-} 
+}) 

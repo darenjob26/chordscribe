@@ -6,18 +6,15 @@ import ThemedInput from "@/components/ui/Input";
 import ThemedButton from "@/components/ui/TButton";
 import { Feather } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
 import {
   Alert,
-  Button,
   FlatList,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Playbook, Song } from "@/types/playbook";
+import { Song } from "@/types/playbook";
 import { observer } from "@legendapp/state/react";
 import { playBookStore$, songStore$ } from "@/services/store";
 
@@ -27,7 +24,7 @@ export default observer(function PlaybookSongsScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
 
-  const songs =  songStore$.songs.get();
+  const songs = songStore$.songs.get();
   const playbooks = playBookStore$.playbooks.get();
   const playbook = playbooks.find(p => p._id === id);
 
@@ -90,26 +87,6 @@ export default observer(function PlaybookSongsScreen() {
     );
   };
 
-  const handleDeleteSong = (song: Song) => {
-    Alert.alert(
-      "Delete Song",
-      "Are you sure you want to delete this song?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel"
-        },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            songStore$.removeSong(song)
-          }
-        }
-      ]
-    );
-  };
-
   const renderSongItem = ({ item }: { item: Song }) => {
     return (
       <TouchableOpacity
@@ -137,12 +114,7 @@ export default observer(function PlaybookSongsScreen() {
             Key: {item.key} • {item.sections.length} {item.sections.length === 1 ? "section" : "sections"}
           </Text>
         </View>
-        <TouchableOpacity
-          onPress={() => handleDeleteSong(item)}
-          className="p-2"
-        >
-          <Feather name="trash-2" size={20} color={colors.error} />
-        </TouchableOpacity>
+
         <Feather name="chevron-right" size={20} color={colors.muted} />
       </TouchableOpacity>
     )

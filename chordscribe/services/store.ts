@@ -173,12 +173,37 @@ export const songStore$ = observable({
     songs: songs(playBookStore$.selectedPlaybook),
     addSong: (song: Song) => {
         songStore$.songs.set([...songStore$.songs.get(), song]);
+        // Update playbook's songs array
+        const playbook = playBookStore$.getPlaybookById(song.playbookId);
+        if (playbook) {
+            playBookStore$.updatePlaybook(playbook, {
+                songs: [...playbook.songs, song._id],
+                syncStatus: 'pending'
+            });
+        }
     },
     removeSong: (song: Song) => {
         songStore$.songs.set(songStore$.songs.get().filter((s) => s._id !== song._id));
+        // Update playbook's songs array
+        const playbook = playBookStore$.getPlaybookById(song.playbookId);
+        if (playbook) {
+            playBookStore$.updatePlaybook(playbook, {
+                songs: playbook.songs.filter(id => id !== song._id),
+                syncStatus: 'pending'
+            });
+        }
     },
     updateSong: (song: Song) => {
-        songStore$.songs.set(songStore$.songs.get().map((s) => s._id === song._id ? song : s));
+        const updatedSongs = songStore$.songs.get().map((s) => s._id === song._id ? song : s);
+        songStore$.songs.set(updatedSongs);
+        // Update playbook's songs array if needed
+        const playbook = playBookStore$.getPlaybookById(song.playbookId);
+        if (playbook && !playbook.songs.includes(song._id)) {
+            playBookStore$.updatePlaybook(playbook, {
+                songs: [...playbook.songs, song._id],
+                syncStatus: 'pending'
+            });
+        }
     },
     getSongById: (id: string) => {
         return songStore$.songs.get().find((s) => s._id === id);

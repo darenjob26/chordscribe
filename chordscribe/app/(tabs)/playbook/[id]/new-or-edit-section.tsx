@@ -115,6 +115,11 @@ export default function NewOrEditSectionScreen() {
       return
     }
 
+    if (editingLineId) {
+      alert("Please save or cancel the current line edit first")
+      return
+    }
+
     // Add the current line if it has chords
     const finalLines = currentLine.chords.length > 0
       ? [...lines, currentLine]
@@ -126,7 +131,7 @@ export default function NewOrEditSectionScreen() {
     }
 
     const newSection: Section = {
-      _id: editSection ? JSON.parse(editSection).id : `section-${Date.now()}`,
+      _id: editSection ? JSON.parse(editSection)._id : `section-${Date.now()}`,
       name: sectionName,
       lines: finalLines
     }
@@ -154,9 +159,18 @@ export default function NewOrEditSectionScreen() {
         <TouchableOpacity onPress={() => router.back()}>
           <Text className="text-primary">Cancel</Text>
         </TouchableOpacity>
-        <Text className="text-lg font-semibold" style={{ color: colors.text }}>New Section</Text>
-        <TouchableOpacity onPress={handleSaveSection}>
-          <Text className="text-primary">Save</Text>
+        <Text className="text-lg font-semibold" style={{ color: colors.text }}>
+          {editSection ? "Edit Section" : "New Section"}
+        </Text>
+        <TouchableOpacity 
+          onPress={handleSaveSection}
+          disabled={editingLineId !== null}
+        >
+          <Text 
+            className={`${editingLineId !== null ? 'text-muted' : 'text-primary'}`}
+          >
+            Save
+          </Text>
         </TouchableOpacity>
       </View>
 
