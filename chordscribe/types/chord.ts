@@ -19,7 +19,7 @@ export interface Section {
 }
 
 export interface Song {
-  id: string
+  _id: string
   title: string
   key: string
   sections: Section[]

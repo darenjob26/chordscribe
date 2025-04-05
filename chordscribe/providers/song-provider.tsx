@@ -20,12 +20,12 @@ export function SongProvider({ children }: { children: ReactNode }) {
 
   const updateSection = (section: Section) => {
     setSections(prev => prev.map(s => 
-      s.id === section.id ? section : s
+      s._id === section._id ? section : s
     ))
   }
 
   const deleteSection = (sectionId: string) => {
-    setSections(prev => prev.filter(s => s.id !== sectionId))
+    setSections(prev => prev.filter(s => s._id !== sectionId))
   }
 
   const clearSections = () => {
