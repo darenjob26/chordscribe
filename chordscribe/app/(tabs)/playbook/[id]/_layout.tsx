@@ -30,6 +30,12 @@ export default function PlaybookLayout() {
             headerShown: false
           }}
         />
+        <Stack.Screen
+          name="edit-song/[songId]"
+          options={{
+            headerShown: false
+          }}
+        />
       </Stack>
     </SongProvider>
   );

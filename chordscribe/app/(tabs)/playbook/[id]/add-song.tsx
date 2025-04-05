@@ -159,7 +159,7 @@ export default observer(function AddSongScreen() {
             style={{ backgroundColor: colors.card, borderColor: colors.border }}
           >
             {sections.map((section) => (
-              <View key={section.id} >
+              <View key={section._id} >
                 {/* Section Action Buttons */}
                 <View className="flex-row justify-end mr-4 items-center relative">
                   <View className="flex-row gap-3 absolute top-4 z-10">
@@ -171,7 +171,7 @@ export default observer(function AddSongScreen() {
                     </TouchableOpacity>
                     <TouchableOpacity
                       className="p-2 bg-white rounded"
-                      onPress={() => handleDeleteSection(section.id)}
+                      onPress={() => handleDeleteSection(section._id)}
                     >
                       <Feather name="trash-2" size={20} color={colors.error} />
                     </TouchableOpacity>

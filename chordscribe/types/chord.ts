@@ -1,5 +1,5 @@
 export interface Chord {
-  id: string
+  _id: string
   root: string
   quality: string
   interval: string
@@ -8,12 +8,12 @@ export interface Chord {
 }
 
 export interface Line {
-  id: string
+  _id: string
   chords: Chord[]
 }
 
 export interface Section {
-  id: string
+  _id: string
   name: string
   lines: Line[]
 }

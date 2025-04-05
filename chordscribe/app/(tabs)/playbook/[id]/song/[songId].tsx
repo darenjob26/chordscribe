@@ -8,36 +8,11 @@ import { useTheme } from "@/providers/theme-provider"
 import ThemedButton from "@/components/ui/TButton"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import ChordProgressionPreview from "@/components/ChordProgressionPreview"
+import { observer } from "@legendapp/state/react"
+import { songStore$ } from "@/services/store"
+import { Song } from "@/types/playbook"
 
-// Types
-interface Chord {
-  id: string
-  root: string
-  quality: string
-  interval: string
-  timing?: number
-}
-
-interface Line {
-  id: string
-  chords: Chord[]
-}
-
-interface Section {
-  id: string
-  name: string
-  lines: Line[]
-}
-
-interface Song {
-  id: string
-  title: string
-  key: string
-  sections: Section[]
-  content?: string // For backward compatibility with mock data
-}
-
-export default function SongDetailScreen() {
+export default observer(function SongDetailScreen() {
   const router = useRouter()
   const { id, songId } = useLocalSearchParams<{ id: string; songId: string }>()
   const { colors } = useTheme()
@@ -49,10 +24,15 @@ export default function SongDetailScreen() {
   const [isPlaying, setIsPlaying] = useState(false)
 
   useEffect(() => {
+    const song = songStore$.getSongById(songId)
+    if(song) {
+      setSong(song)
+    }
   }, [id])
 
-  const handleDeleteSong = () => {
+  const handleDeleteSong = (song: Song) => {
     // In a real app, you would delete the song via an API
+    songStore$.removeSong(song)
     setIsDeleteDialogOpen(false)
     router.back()
   }
@@ -133,7 +113,7 @@ export default function SongDetailScreen() {
                 <ThemedButton
                   title="Delete Song"
                   variant="destructive"
-                  onPress={handleDeleteSong}
+                  onPress={() => handleDeleteSong(song)}
                 />
               </View>
             </View>
@@ -142,5 +122,5 @@ export default function SongDetailScreen() {
       )}
     </View>
   )
-}
+})
 

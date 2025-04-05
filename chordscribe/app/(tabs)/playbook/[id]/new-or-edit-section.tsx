@@ -18,7 +18,7 @@ export default function NewOrEditSectionScreen() {
   const [sectionName, setSectionName] = useState("")
   const [isTimedMode, setIsTimedMode] = useState(false)
   const [currentLine, setCurrentLine] = useState<Line>({
-    id: `line-${Date.now()}`,
+    _id: `line-${Date.now()}`,
     chords: []
   })
   const [lines, setLines] = useState<Line[]>([])
@@ -49,7 +49,7 @@ export default function NewOrEditSectionScreen() {
     if (isSlashChord && !selectedBass) return
 
     const newChord: Chord = {
-      id: `chord-${Date.now()}`,
+      _id: `chord-${Date.now()}`,
       root: selectedRoot,
       quality: selectedQuality,
       interval: selectedInterval,
@@ -72,17 +72,17 @@ export default function NewOrEditSectionScreen() {
   const handleDeleteChord = (chordId: string) => {
     setCurrentLine(prev => ({
       ...prev,
-      chords: prev.chords.filter(chord => chord.id !== chordId)
+      chords: prev.chords.filter(chord => chord._id !== chordId)
     }))
   }
 
   const handleDeleteLine = (lineId: string) => {
-    setLines(prev => prev.filter(line => line.id !== lineId))
+    setLines(prev => prev.filter(line => line._id !== lineId))
   }
 
   const handleEditLine = (line: Line) => {
     setCurrentLine(line)
-    setEditingLineId(line.id)
+    setEditingLineId(line._id)
   }
 
   const handleSaveLine = () => {
@@ -94,7 +94,7 @@ export default function NewOrEditSectionScreen() {
     if (editingLineId) {
       // Update existing line
       setLines(prev => prev.map(line => 
-        line.id === editingLineId ? currentLine : line
+        line._id === editingLineId ? currentLine : line
       ))
     } else {
       // Add new line
@@ -103,7 +103,7 @@ export default function NewOrEditSectionScreen() {
 
     // Reset current line and editing state
     setCurrentLine({
-      id: `line-${Date.now()}`,
+      _id: `line-${Date.now()}`,
       chords: []
     })
     setEditingLineId(null)
@@ -126,7 +126,7 @@ export default function NewOrEditSectionScreen() {
     }
 
     const newSection: Section = {
-      id: editSection ? JSON.parse(editSection).id : `section-${Date.now()}`,
+      _id: editSection ? JSON.parse(editSection).id : `section-${Date.now()}`,
       name: sectionName,
       lines: finalLines
     }
@@ -306,8 +306,8 @@ export default function NewOrEditSectionScreen() {
           <View className="flex-row flex-wrap gap-2">
             {currentLine.chords.map((chord) => (
               <TouchableOpacity
-                key={chord.id}
-                onPress={() => handleDeleteChord(chord.id)}
+                key={chord._id}
+                onPress={() => handleDeleteChord(chord._id)}
                 className="flex-row items-center p-2 rounded-lg"
                 style={{ backgroundColor: colors.primaryLight }}
               >
@@ -331,7 +331,7 @@ export default function NewOrEditSectionScreen() {
             <Text className="text-base font-medium mb-2" style={{ color: colors.text }}>{sectionName} Preview</Text>
             <View className="p-4 border rounded-lg border-border">
               {lines.map((line, index) => (
-                <View key={line.id} className="mb-2">
+                <View key={line._id} className="mb-2">
                   <View className="flex-row justify-between items-center mb-2">
                     <Text className="text-sm font-medium" style={{ color: colors.muted }}>Line {index + 1}</Text>
                     <View className="flex-row gap-2">
@@ -342,7 +342,7 @@ export default function NewOrEditSectionScreen() {
                         <Feather name="edit-2" size={18} color={colors.primary} />
                       </TouchableOpacity>
                       <TouchableOpacity 
-                        onPress={() => handleDeleteLine(line.id)}
+                        onPress={() => handleDeleteLine(line._id)}
                         className="p-1"
                       >
                         <Feather name="trash-2" size={18} color={colors.error} />
@@ -352,7 +352,7 @@ export default function NewOrEditSectionScreen() {
                   <View className="flex-row flex-wrap gap-4">
                     {line.chords.map(chord => (
                       <View
-                        key={chord.id}
+                        key={chord._id}
                         className="flex-row items-center p-2 rounded-lg"
                         style={{ backgroundColor: colors.primaryLight }}
                       >

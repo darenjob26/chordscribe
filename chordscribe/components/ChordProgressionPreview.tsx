@@ -39,15 +39,15 @@ export default function ChordProgressionPreview({
     <View className="rounded-xl overflow-hidden mb-4" style={{ backgroundColor: isDark ? "#1a1a2e" : "#1a1a2e" }}>
       <ScrollView className="p-4">
         {sections.map((section) => (
-          <View key={section.id} className="mb-4">
+          <View key={section._id} className="mb-4">
             <Text className="text-xl font-bold mb-6" style={{ color: "#78E3FD" }}>{section.name}</Text>
 
             {section.lines.map((line) => (
-              <View key={line.id} className="mb-3">
+              <View key={line._id} className="mb-3">
                 <View className="flex-row flex-wrap gap-3">
                   {line.chords.map((chord, index) => {
                     return (
-                      <View key={chord.id} className="flex-row items-center">
+                      <View key={chord._id} className="flex-row items-center">
                         <View className="relative px-1 py-2">
                           <Text className="font-mono text-2xl" style={{ color: "#FFC857" }}>{formatChordDisplay(chord)}</Text>
                           {chord.timing && chord.timing > 0 && (
